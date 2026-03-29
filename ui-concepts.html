@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tickle my Pickle - UI Concepts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #1a1a1a;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 50px;
+            font-size: 32px;
+        }
+
+        .concepts-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .concept {
+            flex: 0 0 375px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .concept-label {
+            text-align: center;
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ===== CONCEPT 1: NEON COURT ===== */
+        .neon-court {
+            background: #0a0a0a;
+            color: #fff;
+            border: 2px solid #39FF14;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.5), 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .neon-header {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            padding: 24px;
+            border-bottom: 3px solid #39FF14;
+            box-shadow: 0 4px 20px rgba(57, 255, 20, 0.3);
+        }
+
+        .neon-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #39FF14;
+            text-shadow: 0 0 10px rgba(57, 255, 20, 0.8);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .neon-subtitle {
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .neon-stat-row {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            border-bottom: 1px solid #39FF1422;
+            background: #0f0f1a;
+        }
+
+        .neon-stat {
+            text-align: center;
+        }
+
+        .neon-stat-value {
+            font-size: 20px;
+            font-weight: 900;
+            color: #39FF14;
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+        }
+
+        .neon-stat-label {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .neon-leaderboard {
+            padding: 0;
+        }
+
+        .neon-player {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid #39FF1411;
+            background: #0a0a0a;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .neon-player::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: #39FF14;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .neon-player:hover::before {
+            opacity: 1;
+        }
+
+        .neon-rank {
+            font-size: 24px;
+            font-weight: 900;
+            color: #39FF14;
+            width: 40px;
+            text-align: center;
+            text-shadow: 0 0 6px rgba(57, 255, 20, 0.5);
+        }
+
+        .neon-player-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .neon-player-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .neon-player-streak {
+            font-size: 11px;
+            color: #39FF14;
+            margin-top: 2px;
+        }
+
+        .neon-elo {
+            font-size: 18px;
+            font-weight: 900;
+            color: #39FF14;
+            text-shadow: 0 0 6px rgba(57, 255, 20, 0.5);
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .neon-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            background: #0f0f1a;
+            border-top: 2px solid #39FF14;
+            box-shadow: 0 -4px 20px rgba(57, 255, 20, 0.2);
+        }
+
+        .neon-nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .neon-nav-item:hover,
+        .neon-nav-item.active {
+            color: #39FF14;
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+            border-bottom-color: #39FF14;
+        }
+
+        /* ===== CONCEPT 2: CLEAN SLATE ===== */
+        .clean-slate {
+            background: #f8fafc;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .clean-header {
+            background: #fff;
+            padding: 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .clean-title {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .clean-subtitle {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .clean-stat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .clean-stat-card {
+            background: #fff;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .clean-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #22c55e;
+            line-height: 1;
+        }
+
+        .clean-stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .clean-leaderboard {
+            padding: 12px;
+            background: #f8fafc;
+        }
+
+        .clean-player {
+            display: flex;
+            align-items: center;
+            padding: 14px;
+            background: #fff;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+
+        .clean-player:hover {
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.08);
+            border-color: #22c55e;
+        }
+
+        .clean-rank {
+            font-size: 20px;
+            font-weight: 700;
+            color: #22c55e;
+            width: 36px;
+            text-align: center;
+        }
+
+        .clean-player-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .clean-player-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .clean-player-streak {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .clean-elo {
+            font-size: 16px;
+            font-weight: 700;
+            color: #22c55e;
+            min-width: 56px;
+            text-align: right;
+        }
+
+        .clean-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .clean-nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            font-size: 11px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+
+        .clean-nav-item:hover,
+        .clean-nav-item.active {
+            color: #22c55e;
+            border-bottom-color: #22c55e;
+        }
+
+        /* ===== CONCEPT 3: DILL PICKLE RETRO ===== */
+        .retro-pickle {
+            background: #0d1f13;
+            color: #e8f4e1;
+            border: 3px double #7ec850;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+        }
+
+        .retro-header {
+            background: #0d1f13;
+            padding: 20px;
+            border-bottom: 3px double #7ec850;
+            text-align: center;
+        }
+
+        .retro-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #7ec850;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 0 #000;
+            margin-bottom: 6px;
+        }
+
+        .retro-subtitle {
+            font-size: 11px;
+            color: #7ec850;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .retro-stat-row {
+            display: flex;
+            justify-content: space-around;
+            padding: 16px;
+            background: #0d1f13;
+            border-bottom: 2px dashed #7ec850;
+        }
+
+        .retro-stat {
+            text-align: center;
+            border-right: 2px dashed #7ec850;
+            padding: 0 12px;
+        }
+
+        .retro-stat:last-child {
+            border-right: none;
+        }
+
+        .retro-stat-value {
+            font-size: 22px;
+            font-weight: 900;
+            color: #7ec850;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .retro-stat-label {
+            font-size: 9px;
+            color: #7ec850;
+            margin-top: 4px;
+            text-transform: uppercase;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        .retro-leaderboard {
+            padding: 0;
+            background: #0d1f13;
+        }
+
+        .retro-player {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid #7ec850;
+            border-top: none;
+            background: #0d1f13;
+            position: relative;
+        }
+
+        .retro-player::before {
+            content: '▸';
+            position: absolute;
+            left: 4px;
+            color: #7ec850;
+            font-size: 16px;
+        }
+
+        .retro-rank {
+            font-size: 20px;
+            font-weight: 900;
+            color: #7ec850;
+            width: 36px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .retro-player-info {
+            flex: 1;
+            margin-left: 12px;
+        }
+
+        .retro-player-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #e8f4e1;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .retro-player-streak {
+            font-size: 10px;
+            color: #7ec850;
+            margin-top: 2px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .retro-elo {
+            font-size: 16px;
+            font-weight: 900;
+            color: #7ec850;
+            min-width: 52px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .retro-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            background: #0d1f13;
+            border-top: 3px double #7ec850;
+        }
+
+        .retro-nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 9px;
+            color: #7ec850;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-right: 2px dashed #7ec850;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+
+        .retro-nav-item:last-child {
+            border-right: none;
+        }
+
+        .retro-nav-item:hover,
+        .retro-nav-item.active {
+            background: #1a3d20;
+            box-shadow: inset 0 0 8px rgba(126, 200, 80, 0.3);
+        }
+
+        .retro-emoji {
+            display: inline-block;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🥒 Tickle my Pickle - UI Concept Explorations</h1>
+
+    <div class="concepts-container">
+        <!-- CONCEPT 1: NEON COURT -->
+        <div>
+            <div class="concept neon-court">
+                <div class="neon-header">
+                    <div class="neon-title">⚡ NEON COURT</div>
+                    <div class="neon-subtitle">Live Rankings</div>
+                </div>
+
+                <div class="neon-stat-row">
+                    <div class="neon-stat">
+                        <div class="neon-stat-value">2847</div>
+                        <div class="neon-stat-label">Games Played</div>
+                    </div>
+                    <div class="neon-stat">
+                        <div class="neon-stat-value">1240</div>
+                        <div class="neon-stat-label">Your ELO</div>
+                    </div>
+                    <div class="neon-stat">
+                        <div class="neon-stat-value">12</div>
+                        <div class="neon-stat-label">Win Streak</div>
+                    </div>
+                </div>
+
+                <div class="neon-leaderboard">
+                    <div class="neon-player">
+                        <div class="neon-rank">1</div>
+                        <div class="neon-player-info">
+                            <div class="neon-player-name">🔥 Dill-ligence</div>
+                            <div class="neon-player-streak">8 win streak 🏆</div>
+                        </div>
+                        <div class="neon-elo">2156</div>
+                    </div>
+                    <div class="neon-player">
+                        <div class="neon-rank">2</div>
+                        <div class="neon-player-info">
+                            <div class="neon-player-name">⚡ SourGrape</div>
+                            <div class="neon-player-streak">5 win streak 🔥</div>
+                        </div>
+                        <div class="neon-elo">2089</div>
+                    </div>
+                    <div class="neon-player">
+                        <div class="neon-rank">3</div>
+                        <div class="neon-player-info">
+                            <div class="neon-player-name">💥 PickleSlayer</div>
+                            <div class="neon-player-streak">3 win streak</div>
+                        </div>
+                        <div class="neon-elo">1956</div>
+                    </div>
+                    <div class="neon-player">
+                        <div class="neon-rank">4</div>
+                        <div class="neon-player-info">
+                            <div class="neon-player-name">🌟 CourtKing</div>
+                            <div class="neon-player-streak">1 win streak</div>
+                        </div>
+                        <div class="neon-elo">1847</div>
+                    </div>
+                    <div class="neon-player">
+                        <div class="neon-rank">5</div>
+                        <div class="neon-player-info">
+                            <div class="neon-player-name">🎯 SpinMaster</div>
+                            <div class="neon-player-streak">2 losses</div>
+                        </div>
+                        <div class="neon-elo">1723</div>
+                    </div>
+                </div>
+
+                <div class="neon-nav">
+                    <div class="neon-nav-item active">🏠 HOME</div>
+                    <div class="neon-nav-item">📊 LOG</div>
+                    <div class="neon-nav-item">🏆 RANK</div>
+                    <div class="neon-nav-item">👤 PROFILE</div>
+                </div>
+            </div>
+            <div class="concept-label">Concept 1: Neon Court</div>
+        </div>
+
+        <!-- CONCEPT 2: CLEAN SLATE -->
+        <div>
+            <div class="concept clean-slate">
+                <div class="clean-header">
+                    <div class="clean-title">Leaderboard</div>
+                    <div class="clean-subtitle">Current rankings</div>
+                </div>
+
+                <div class="clean-stat-row">
+                    <div class="clean-stat-card">
+                        <div class="clean-stat-value">2847</div>
+                        <div class="clean-stat-label">Games Played</div>
+                    </div>
+                    <div class="clean-stat-card">
+                        <div class="clean-stat-value">1240</div>
+                        <div class="clean-stat-label">Your ELO</div>
+                    </div>
+                    <div class="clean-stat-card">
+                        <div class="clean-stat-value">12</div>
+                        <div class="clean-stat-label">Win Streak</div>
+                    </div>
+                    <div class="clean-stat-card">
+                        <div class="clean-stat-value">87%</div>
+                        <div class="clean-stat-label">Win Rate</div>
+                    </div>
+                </div>
+
+                <div class="clean-leaderboard">
+                    <div class="clean-player">
+                        <div class="clean-rank">1</div>
+                        <div class="clean-player-info">
+                            <div class="clean-player-name">Dill-ligence</div>
+                            <div class="clean-player-streak">8 consecutive wins</div>
+                        </div>
+                        <div class="clean-elo">2156</div>
+                    </div>
+                    <div class="clean-player">
+                        <div class="clean-rank">2</div>
+                        <div class="clean-player-info">
+                            <div class="clean-player-name">SourGrape</div>
+                            <div class="clean-player-streak">5 consecutive wins</div>
+                        </div>
+                        <div class="clean-elo">2089</div>
+                    </div>
+                    <div class="clean-player">
+                        <div class="clean-rank">3</div>
+                        <div class="clean-player-info">
+                            <div class="clean-player-name">PickleSlayer</div>
+                            <div class="clean-player-streak">3 consecutive wins</div>
+                        </div>
+                        <div class="clean-elo">1956</div>
+                    </div>
+                    <div class="clean-player">
+                        <div class="clean-rank">4</div>
+                        <div class="clean-player-info">
+                            <div class="clean-player-name">CourtKing</div>
+                            <div class="clean-player-streak">1 consecutive win</div>
+                        </div>
+                        <div class="clean-elo">1847</div>
+                    </div>
+                    <div class="clean-player">
+                        <div class="clean-rank">5</div>
+                        <div class="clean-player-info">
+                            <div class="clean-player-name">SpinMaster</div>
+                            <div class="clean-player-streak">Recently active</div>
+                        </div>
+                        <div class="clean-elo">1723</div>
+                    </div>
+                </div>
+
+                <div class="clean-nav">
+                    <div class="clean-nav-item active">Home</div>
+                    <div class="clean-nav-item">Log Game</div>
+                    <div class="clean-nav-item">Rankings</div>
+                    <div class="clean-nav-item">Profile</div>
+                </div>
+            </div>
+            <div class="concept-label">Concept 2: Clean Slate</div>
+        </div>
+
+        <!-- CONCEPT 3: DILL PICKLE RETRO -->
+        <div>
+            <div class="concept retro-pickle">
+                <div class="retro-header">
+                    <div class="retro-title">🥒 DILL BOARD 🥒</div>
+                    <div class="retro-subtitle">>> COURT RANKINGS <<</div>
+                </div>
+
+                <div class="retro-stat-row">
+                    <div class="retro-stat">
+                        <div class="retro-stat-value">2847</div>
+                        <div class="retro-stat-label">Games</div>
+                    </div>
+                    <div class="retro-stat">
+                        <div class="retro-stat-value">1240</div>
+                        <div class="retro-stat-label">ELO</div>
+                    </div>
+                    <div class="retro-stat">
+                        <div class="retro-stat-value">12</div>
+                        <div class="retro-stat-label">Streak</div>
+                    </div>
+                </div>
+
+                <div class="retro-leaderboard">
+                    <div class="retro-player">
+                        <div class="retro-rank">1ST</div>
+                        <div class="retro-player-info">
+                            <div class="retro-player-name">🥒 Dill-ligence 🥒</div>
+                            <div class="retro-player-streak">>>> 8 WINS <<<</div>
+                        </div>
+                        <div class="retro-elo">2156</div>
+                    </div>
+                    <div class="retro-player">
+                        <div class="retro-rank">2ND</div>
+                        <div class="retro-player-info">
+                            <div class="retro-player-name">🌶️ SourGrape 🌶️</div>
+                            <div class="retro-player-streak">>>> 5 WINS <<<</div>
+                        </div>
+                        <div class="retro-elo">2089</div>
+                    </div>
+                    <div class="retro-player">
+                        <div class="retro-rank">3RD</div>
+                        <div class="retro-player-info">
+                            <div class="retro-player-name">⚔️ PickleSlayer ⚔️</div>
+                            <div class="retro-player-streak">>>> 3 WINS <<<</div>
+                        </div>
+                        <div class="retro-elo">1956</div>
+                    </div>
+                    <div class="retro-player">
+                        <div class="retro-rank">4TH</div>
+                        <div class="retro-player-info">
+                            <div class="retro-player-name">👑 CourtKing 👑</div>
+                            <div class="retro-player-streak">>>> 1 WIN <<<</div>
+                        </div>
+                        <div class="retro-elo">1847</div>
+                    </div>
+                    <div class="retro-player">
+                        <div class="retro-rank">5TH</div>
+                        <div class="retro-player-info">
+                            <div class="retro-player-name">🎪 SpinMaster 🎪</div>
+                            <div class="retro-player-streak">>>> RISING STAR <<<</div>
+                        </div>
+                        <div class="retro-elo">1723</div>
+                    </div>
+                </div>
+
+                <div class="retro-nav">
+                    <div class="retro-nav-item active">🏠 HOME</div>
+                    <div class="retro-nav-item">📝 LOG</div>
+                    <div class="retro-nav-item">🏆 RANK</div>
+                    <div class="retro-nav-item">👤 PRO</div>
+                </div>
+            </div>
+            <div class="concept-label">Concept 3: Dill Pickle Retro</div>
+        </div>
+    </div>
+</body>
+</html>

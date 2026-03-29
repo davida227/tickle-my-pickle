@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  overscroll-behavior: none;
+  @apply bg-dark-900 text-dark-100;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Neon glow utilities ─────────────────────────────── */
+@layer utilities {
+  /* Electric text glow — use on Elo numbers and key stats */
+  .neon-text {
+    color: #39FF14;
+    text-shadow:
+      0 0 8px rgba(57, 255, 20, 0.8),
+      0 0 16px rgba(57, 255, 20, 0.4);
+  }
+
+  /* Subtler glow for secondary neon elements */
+  .neon-text-sm {
+    color: #39FF14;
+    text-shadow: 0 0 6px rgba(57, 255, 20, 0.55);
+  }
+
+  /* Glowing neon border */
+  .neon-border {
+    border-color: #39FF14;
+    box-shadow:
+      0 0 8px rgba(57, 255, 20, 0.4),
+      inset 0 0 8px rgba(57, 255, 20, 0.05);
+  }
+
+  /* Button with neon glow */
+  .neon-btn {
+    box-shadow:
+      0 4px 20px rgba(57, 255, 20, 0.35),
+      0 0 0 1px rgba(57, 255, 20, 0.2);
+  }
+  .neon-btn:active {
+    box-shadow:
+      0 2px 10px rgba(57, 255, 20, 0.25),
+      0 0 0 1px rgba(57, 255, 20, 0.15);
+  }
+
+  /* Nav bar top glow */
+  .neon-nav-glow {
+    box-shadow: 0 -4px 20px rgba(57, 255, 20, 0.2);
+  }
+
+  /* Card with subtle neon tint */
+  .neon-card {
+    box-shadow:
+      0 0 0 1px rgba(57, 255, 20, 0.07),
+      0 4px 12px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Header bottom glow */
+  .neon-header-glow {
+    box-shadow: 0 4px 20px rgba(57, 255, 20, 0.2);
+  }
+}

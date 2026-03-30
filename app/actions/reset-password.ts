@@ -1,6 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 interface FindUserResult {
@@ -21,10 +20,11 @@ export async function findUserByIdentifier(
   identifier: string
 ): Promise<FindUserResult> {
   try {
-    const supabase = await createClient()
+    // Use admin client — user is not authenticated yet during password reset
+    const admin = createAdminClient()
 
     // Query for username (exact match, case-insensitive)
-    const { data: userByUsername } = await supabase
+    const { data: userByUsername } = await admin
       .from('profiles')
       .select('id, full_name, username')
       .ilike('username', identifier)
@@ -39,7 +39,7 @@ export async function findUserByIdentifier(
     }
 
     // Query for full_name (case-insensitive)
-    const { data: userByFullName } = await supabase
+    const { data: userByFullName } = await admin
       .from('profiles')
       .select('id, full_name, username')
       .ilike('full_name', `%${identifier}%`)

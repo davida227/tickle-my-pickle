@@ -103,12 +103,12 @@ export default function ResetPasswordPage() {
         {/* Logo / Title */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🥒</div>
-          <h1 className="text-3xl font-bold text-dark-100">Tickle my Pickle</h1>
-          <p className="text-dark-400 mt-1">Reset your password</p>
+          <h1 className="text-3xl font-black tracking-tight neon-text">Tickle my Pickle</h1>
+          <p className="text-dark-400 mt-1 uppercase tracking-widest text-xs">Reset your password</p>
         </div>
 
         {/* Card */}
-        <div className="bg-dark-800 rounded-2xl shadow-xl p-6 border border-dark-700">
+        <div className="bg-dark-800 rounded-2xl shadow-xl p-6 neon-border border-2">
           {/* Step indicator */}
           <p className="text-xs text-dark-400 text-center mb-6">
             {step === 'identify' ? 'Step 1 of 2' : 'Step 2 of 2'}
@@ -136,7 +136,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-brand-700 active:bg-brand-800 transition-colors disabled:opacity-50"
+                className="w-full bg-brand-600 text-dark-900 py-3 rounded-xl font-black text-sm uppercase tracking-widest neon-btn transition-all active:bg-brand-700 disabled:opacity-50"
               >
                 {loading ? 'Searching...' : 'Find My Account'}
               </button>
@@ -184,7 +184,7 @@ export default function ResetPasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-brand-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-brand-700 active:bg-brand-800 transition-colors disabled:opacity-50"
+                className="w-full bg-brand-600 text-dark-900 py-3 rounded-xl font-black text-sm uppercase tracking-widest neon-btn transition-all active:bg-brand-700 disabled:opacity-50"
               >
                 {loading ? 'Updating...' : 'Update Password'}
               </button>

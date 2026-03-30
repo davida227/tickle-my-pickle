@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { calculateSinglesElo, calculateDoublesElo } from '@/lib/elo'
-import { checkNewAchievements } from '@/lib/achievements'
+import { saveGame } from '@/app/actions/save-game'
 
 type Player = {
   id: string
@@ -64,7 +63,6 @@ export default function LogGamePage() {
     })
   }
 
-  // Options for a given slot — exclude players already picked elsewhere (unless it's this slot's current value)
   function optionsFor(team: 1 | 2, slot: 0 | 1): Player[] {
     const currentValue = (team === 1 ? team1 : team2)[slot]
     const otherSelected = allSelected.filter(id => id !== currentValue)
@@ -96,111 +94,20 @@ export default function LogGamePage() {
 
     setLoading(true)
 
-    const getPlayer = (id: string) => allPlayers.find(p => p.id === id)!
-    const team1Won = s1 > s2
-
-    // Calculate Elo changes
-    const eloChanges: Record<string, { before: number; change: number; won: boolean }> = {}
-
-    if (format === 'singles') {
-      const p1 = getPlayer(t1[0]), p2 = getPlayer(t2[0])
-      const result = calculateSinglesElo(p1.elo_rating, p2.elo_rating, team1Won)
-      eloChanges[p1.id] = { before: p1.elo_rating, change: result.player1Change, won: team1Won }
-      eloChanges[p2.id] = { before: p2.elo_rating, change: result.player2Change, won: !team1Won }
-    } else {
-      const [p1a, p1b] = [getPlayer(t1[0]), getPlayer(t1[1])]
-      const [p2a, p2b] = [getPlayer(t2[0]), getPlayer(t2[1])]
-      const result = calculateDoublesElo(
-        [p1a.elo_rating, p1b.elo_rating],
-        [p2a.elo_rating, p2b.elo_rating],
-        team1Won
-      )
-      eloChanges[p1a.id] = { before: p1a.elo_rating, change: result.team1Change, won: team1Won }
-      eloChanges[p1b.id] = { before: p1b.elo_rating, change: result.team1Change, won: team1Won }
-      eloChanges[p2a.id] = { before: p2a.elo_rating, change: result.team2Change, won: !team1Won }
-      eloChanges[p2b.id] = { before: p2b.elo_rating, change: result.team2Change, won: !team1Won }
-    }
-
-    // Insert game
-    const { data: game, error: gameError } = await supabase
-      .from('games')
-      .insert({ format, team1_score: s1, team2_score: s2, created_by: currentUser?.id })
-      .select()
-      .single()
-
-    if (gameError || !game) { setError('Failed to save game.'); setLoading(false); return }
-
-    // Insert game_players
-    const gamePlayers = [
-      ...t1.map(id => ({ game_id: game.id, player_id: id, team: 1, elo_before: eloChanges[id].before, elo_change: eloChanges[id].change, won: eloChanges[id].won })),
-      ...t2.map(id => ({ game_id: game.id, player_id: id, team: 2, elo_before: eloChanges[id].before, elo_change: eloChanges[id].change, won: eloChanges[id].won })),
-    ]
-
-    const { error: gpError } = await supabase.from('game_players').insert(gamePlayers)
-    if (gpError) { setError('Failed to save players.'); setLoading(false); return }
-
-    // Average opponent Elo per team (for upset artist achievement)
-    const team1AvgElo = t1.reduce((sum, id) => sum + getPlayer(id).elo_rating, 0) / t1.length
-    const team2AvgElo = t2.reduce((sum, id) => sum + getPlayer(id).elo_rating, 0) / t2.length
-
-    // Fetch already-earned achievements for all participants
-    const allIds = [...t1, ...t2]
-    const { data: existingAchievements } = await supabase
-      .from('achievements')
-      .select('player_id, achievement_key')
-      .in('player_id', allIds)
-
-    const alreadyEarnedByPlayer: Record<string, string[]> = {}
-    allIds.forEach(id => { alreadyEarnedByPlayer[id] = [] })
-    existingAchievements?.forEach(ea => {
-      alreadyEarnedByPlayer[ea.player_id]?.push(ea.achievement_key)
+    // All DB writes happen server-side via admin client (bypasses RLS)
+    // createdBy is now derived server-side from the verified session
+    const result = await saveGame({
+      format,
+      team1Score: s1,
+      team2Score: s2,
+      team1Ids: t1,
+      team2Ids: t2,
     })
 
-    // Update each player
-    for (const [playerId, data] of Object.entries(eloChanges)) {
-      const player = getPlayer(playerId)
-      const newElo = data.before + data.change
-
-      // Update streak: positive = win streak, negative = loss streak
-      const prevStreak = player.current_streak ?? 0
-      let newStreak: number
-      if (data.won) {
-        newStreak = prevStreak > 0 ? prevStreak + 1 : 1
-      } else {
-        newStreak = prevStreak < 0 ? prevStreak - 1 : -1
-      }
-      const newLongest = Math.max(player.longest_streak ?? 0, newStreak > 0 ? newStreak : 0)
-      const totalGames = player.wins + player.losses + 1
-
-      await supabase.from('profiles').update({
-        elo_rating: newElo,
-        wins: player.wins + (data.won ? 1 : 0),
-        losses: player.losses + (data.won ? 0 : 1),
-        current_streak: newStreak,
-        longest_streak: newLongest,
-      }).eq('id', playerId)
-
-      // Which team is this player on, and what's the opponent avg?
-      const isTeam1 = t1.includes(playerId)
-      const opponentAvgElo = isTeam1 ? team2AvgElo : team1AvgElo
-
-      const newAchievements = checkNewAchievements({
-        wonGame: data.won,
-        prevWins: player.wins,
-        prevStreak,
-        newStreak,
-        newElo,
-        prevElo: data.before,
-        totalGames,
-        opponentEloAvg: opponentAvgElo,
-        alreadyEarned: alreadyEarnedByPlayer[playerId] ?? [],
-      })
-
-      if (newAchievements.length > 0) {
-        await supabase.from('achievements').insert(
-          newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))
-        )
-      }
+    if (result.error) {
+      setError(result.error)
+      setLoading(false)
+      return
     }
 
     router.push('/')
@@ -237,7 +144,6 @@ export default function LogGamePage() {
               </option>
             ))}
           </select>
-          {/* Chevron */}
           <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 text-xs">▾</div>
         </div>
       </div>

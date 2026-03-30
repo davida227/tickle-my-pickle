@@ -53,13 +53,17 @@ function PwaInstallTip() {
   )
 }
 
+// Synthetic email — users never see this, Supabase requires an email internally
+function toEmail(username: string) {
+  return `${username.trim().toLowerCase()}@tmp.pickle`
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -71,9 +75,16 @@ export default function LoginPage() {
     setMessage('')
     setLoading(true)
 
+    const syntheticEmail = toEmail(username)
+
     if (mode === 'signup') {
+      if (!fullName.trim()) {
+        setError('Please enter your full name.')
+        setLoading(false)
+        return
+      }
       const { error } = await supabase.auth.signUp({
-        email,
+        email: syntheticEmail,
         password,
         options: {
           data: { username, full_name: fullName },
@@ -82,11 +93,17 @@ export default function LoginPage() {
       if (error) { setError(error.message); setLoading(false); return }
       setMessage('Account created! You can now sign in.')
       setMode('signin')
-      setEmail('')
       setPassword('')
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) { setError(error.message); setLoading(false); return }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: syntheticEmail,
+        password,
+      })
+      if (error) {
+        setError('Invalid username or password.')
+        setLoading(false)
+        return
+      }
       router.push('/')
       router.refresh()
     }
@@ -127,55 +144,33 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'signup' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-dark-300 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    required
-                    className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    placeholder="David Alummoottil"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-dark-300 mb-1">Username</label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
-                    required
-                    className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    placeholder="david"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-dark-300 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    placeholder="you@example.com"
-                  />
-                </div>
-              </>
-            )}
-            {mode === 'signin' && (
               <div>
-                <label className="block text-sm font-medium text-dark-300 mb-1">Email</label>
+                <label className="block text-sm font-medium text-dark-300 mb-1">Full Name</label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  type="text"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
                   required
                   className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  placeholder="you@example.com"
+                  placeholder="David Alummoottil"
                 />
               </div>
             )}
+
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1">Username</label>
+              <input
+                type="text"
+                value={username}
+                onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                required
+                autoCapitalize="none"
+                autoCorrect="off"
+                className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                placeholder="david"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1">Password</label>
               <input

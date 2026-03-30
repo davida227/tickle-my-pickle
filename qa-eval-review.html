@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "qa-validator", "runs": [{"id": "eval-rls-bug-with_skill", "prompt": "I just built a feature where users can log pickleball games. It works when I test it myself but my friend says his stats never update after I log a game we played. Can you figure out what's going on?", "eval_id": 1, "outputs": [{"name": "report.md", "type": "text", "content": "# QA Report: Pickleball App Game Logging Feature\n\n## Executive Summary\n\nInvestigation identified a **CRITICAL issue** where friend/opponent stats fail to update when a game is logged, while the game record is created successfully. The root cause is improper RLS policy configuration combined with insufficient error handling in the server action.\n\n---\n\n## Investigation Process\n\n### Phase 1: Data Flow Mapping\n\n**Database Schema:**\n- `profiles` (id, username, full_name, elo_rating, wins, losses, current_streak, longest_streak)\n- `games` (id, format, team1_score, team2_score, created_by, played_at, created_at)\n- `game_players` (id, game_id, player_id, team, elo_before, elo_change, won)\n- `achievements` (id, player_id, achievement_key, earned_at)\n\n**Write Operations Flow:**\n1. User submits game results from `app/log-game/page.tsx` (client component)\n2. Server action `saveGame()` in `app/actions/save-game.ts` is called\n3. Admin client fetches all participating player profiles\n4. Creates game record and game_players entries\n5. Loops through each player and updates their profile stats (elo_rating, wins, losses, current_streak, longest_streak)\n6. Checks and awards achievements\n\n**Read Operations:**\n- Profile data displayed via server-side fetches with server client in pages\n- RLS allows all authenticated users to read profiles and game data\n\n---\n\n### Phase 2: RLS Policy Audit\n\n**CRITICAL ISSUE: RLS Policy Prevents Admin Client Updates**\n\nThe `profiles` table has the following UPDATE policy:\n```sql\ncreate policy \"Users can update their own profile\"\n  on public.profiles for update using (auth.uid() = id);\n```\n\n**Problem:** This policy uses `auth.uid() = id` which checks if the authenticated user's ID matches the profile being updated. When using the service role key (admin client):\n\n1. Supabase documentation states the service role key \"bypasses RLS\"\n2. However, this applies to policies that check `auth.role()`\n3. Policies that check `auth.uid()` may still block updates depending on implementation\n4. More critically, when `auth.uid()` is checked with a service role context, it may return NULL, making the condition `NULL = id` always false\n\n**Evidence:**\n- File: `/app/actions/save-game.ts`, lines 114-120\n- The update calls `.eq('id', playerId)` without `.select()` to verify success\n- Code checks only for `error`, not for silent RLS failures\n- No validation that rows were actually updated (would require `.select().single()`)\n\n**Impact:** ALL profile updates in the admin client context are silently blocked by the RLS policy, not just for friends. The game record is created (because games table has different policies), but stats for ALL players should fail to update.\n\n---\n\n### Phase 3: Multi-User Operation Audit\n\n**Finding: Silent Partial Failures**\n\nThe `saveGame()` action has a critical flaw in its error handling:\n\n```typescript\n// Line 114-124\nconst { error: updateErr } = await admin.from('profiles').update({...}).eq('id', playerId)\n\nif (updateErr) {\n  console.error(`Failed to update profile for ${playerId}:`, updateErr)\n}\n\n// Function continues regardless of update success/failure\n// ...achievement checks, inserts, etc.\n```\n\n**Issues:**\n1. The code logs errors but doesn't stop execution\n2. No check for whether rows were actually updated (requires `.select()` to get count)\n3. Function returns `{ success: true }` at line 149 even if ALL profile updates failed\n4. Game record is created, but player stats are never updated\n5. Inconsistent state: game exists with game_players records, but profile stats unchanged\n\n**Scenario:**\n- User logs game with Friend A as opponent\n- Game record is inserted successfully (different RLS policy)\n- game_players records are inserted successfully (different RLS policy)\n- For User: profile update is silently blocked by RLS (auth.uid() doesn't match admin context)\n- For Friend A: profile update is silently blocked by RLS (same reason)\n- Function returns `{ success: true }`\n- User sees success message and navigates away\n- Neither player's stats were updated\n\n---\n\n### Phase 4: Client-Server Boundary Audit\n\n**Finding: Data Freshness**\n\nFile: `app/log-game/page.tsx`, lines 36-49\n\n```typescript\nuseEffect(() => {\n  async function load() {\n    const { data: { user } } = await supabase.auth.getUser()\n    const { data: players } = await supabase\n      .from('profiles')\n      .select('...')\n      .order('full_name')\n    setAllPlayers(players)\n  }\n})\n```\n\nThis uses a browser client (anon key) to fetch players. The fetched data is cached in state. This is correct because the actual saves use a server action with fresh fetches.\n\n**No issues detected in this phase.**\n\n---\n\n### Phase 5: Error Handling Audit\n\n**CRITICAL: Silent Failure Pattern**\n\nThe save-game action has multiple error handling gaps:\n\n1. **Profile Update Errors (Line 122-124):**\n   - Only logs errors with `console.error()` (not visible to user)\n   - Continues execution even on error\n   - No user-facing error message\n   - Function still returns `{ success: true }`\n\n   ```typescript\n   if (updateErr) {\n     console.error(`Failed to update profile for ${playerId}:`, updateErr)\n     // MISSING: return { error: '...' }\n   }\n   ```\n\n2. **Missing Count Validation:**\n   - `.update()` should be followed by `.select()` to verify rows were updated\n   - Current code doesn't check if any rows were modified\n   - Supabase returns `{ data: null, error }` for `.update()` without `.select()`\n   - RLS blocks can occur WITHOUT an error field being populated\n\n3. **Achievement Insert Errors (Line 142-146):**\n   - No error checking on achievement inserts\n   - Silent failures not reported\n\n4. **Insufficient Response Validation:**\n   - Games insert checks: `if (gameError || !game) return { error: ... }` \u2713\n   - Game_players insert checks: `if (gpError) return { error: ... }` \u2713\n   - Profiles update checks: `if (updateErr)` only logs, doesn't return \u2717\n   - Achievements insert: no error checking \u2717\n\n---\n\n### Phase 6: Type Safety & Edge Cases\n\n**Finding: Potential Null Reference**\n\nLine 39: `const getPlayer = (id: string) => players.find(p => p.id === id)!`\n\nUses non-null assertion `!` but if the fetch earlier didn't include all players, this could fail. The validation at line 36 checks `players.length !== allIds.length`, so this is protected.\n\n**Finding: Streak Calculation Edge Cases**\n\nLines 104-111 calculate streaks correctly, handling:\n- \u2713 Win followed by previous wins: increment streak\n- \u2713 Win after losses: reset to 1\n- \u2713 Loss after wins: reset to -1\n- \u2713 Loss after losses: decrement streak\n- \u2713 Max longest streak calculation\n\n**No critical type safety issues detected.**\n\n---\n\n## QA Report Summary\n\n### Critical Issues (Will Cause Bugs in Production)\n\n**[CRITICAL] Profile Stats Never Update After Logging Game**\n- **File:** `/app/actions/save-game.ts`, lines 114-120\n- **Impact:** After a user logs a game, NO player stats are updated (neither the logging user nor opponents). The game record is created successfully but appears to have no effect on ratings, win records, or streaks. This completely breaks the core feature of the app.\n- **Root Cause:** The profiles table RLS policy uses `auth.uid() = id` which blocks updates from the admin client. Additionally, the code doesn't verify that updates succeeded.\n- **Evidence:**\n  - Line 114-120: Update query has no `.select()` to return updated rows\n  - Line 122-124: Only logs errors, doesn't validate update success\n  - Line 149: Returns success regardless of whether any stats were actually updated\n- **Fix (Priority 1):**\n  - Add RLS policy for service role: `create policy \"Service role can update all profiles\" on public.profiles for update using (auth.role() = 'service_role');`\n  - OR: Create a Supabase function that updates profiles without RLS checks\n  - Add error handling that checks if updates succeeded:\n    ```typescript\n    const { data, error } = await admin.from('profiles').update({...}).eq('id', playerId).select().single()\n    if (error || !data) return { error: 'Failed to update profile' }\n    ```\n  - Return error immediately instead of continuing\n\n**[CRITICAL] Game Logs Succeed But Stats Don't Update (Silent Failure)**\n- **File:** `/app/actions/save-game.ts`, lines 114-124\n- **Impact:** Users get a \"success\" message but their stats never actually update. This is worse than a failure because it's silent and appears to work.\n- **Root Cause:** Error handling only checks for database errors (`error` field), not for RLS blocks or update failures. The function returns `{ success: true }` even when updates fail.\n- **Fix (Priority 1):**\n  - Validate that `.update()` actually modified rows by adding `.select().single()` and checking result\n  - Return error if any profile update fails instead of continuing\n  - Test end-to-end with fresh user accounts to verify stats actually update\n\n### Warnings (Potential Issues Under Certain Conditions)\n\n**[WARN] Achievement Inserts Not Error Checked**\n- **File:** `/app/actions/save-game.ts`, line 143-145\n- **When it triggers:** When achievement inserts fail silently due to database errors or RLS issues\n- **Impact:** Players won't receive earned achievements but function still returns success\n- **Fix:** Add error checking: `const { error: achError } = await admin.from('achievements').insert(...); if (achError) console.error(...)`\n\n**[WARN] Game Record Created But Stats Don't Update (Data Inconsistency)**\n- **File:** `/app/actions/save-game.ts`, line 72 vs line 149\n- **When it triggers:** If profile updates are blocked by RLS while game inserts succeed (different policies)\n- **Impact:** Database has orphaned game records with no corresponding profile changes, creating confusing data state\n- **Fix:** Use a database transaction to ensure atomicity, or add pre-flight validation to catch RLS issues before inserting game records\n\n**[WARN] Console Errors Not User-Visible**\n- **File:** `/app/actions/save-game.ts`, line 123\n- **When it triggers:** On any profile update error\n- **Impact:** Only visible in server logs, not to the user. User sees success but stats don't update.\n- **Fix:** Return errors to user: `return { error: 'Failed to update player stats' }`\n\n### Suggestions (Code Quality)\n\n**[INFO] Add Query Result Validation for Admin Client Operations**\n- **File:** `/app/actions/save-game.ts`\n- **Rationale:** The admin client is used to bypass RLS, but the code assumes success without verification. All `.update()`, `.delete()` operations with admin client should include `.select()` and validate results.\n- **Pattern to adopt:**\n  ```typescript\n  const { data: updated, error } = await admin\n    .from('profiles')\n    .update({...})\n    .eq('id', playerId)\n    .select()\n    .single()\n\n  if (error || !updated) {\n    return { error: 'Failed to update profile' }\n  }\n  ```\n\n---\n\n## Recommended Action Items\n\n1. **IMMEDIATE:** Fix RLS policy for profiles update to allow service role\n   - Add policy: `create policy \"Service role updates\" on public.profiles for update using (auth.role() = 'service_role');`\n   - Test: Log a game and verify both players' stats update\n\n2. **IMMEDIATE:** Add error validation to profile updates\n   - Include `.select().single()` on update queries\n   - Check results and return errors instead of silent failures\n\n3. **HIGH:** End-to-end test with multiple users\n   - Create test accounts for User A and Friend B\n   - User A logs game with Friend B as opponent\n   - Verify BOTH users' stats update\n   - Verify stats don't update if service role key is missing\n\n4. **HIGH:** Add server-side logging\n   - Log successes: when profile stats are updated\n   - Log failures: when any operation fails\n   - Track counts: how many players were updated vs attempted\n\n5. **MEDIUM:** Consider using Supabase functions\n   - Create a stored function `log_game()` that handles the entire operation atomically\n   - Avoids relying on client-side error handling for database consistency\n\n---\n\n## Testing Checklist\n\n- [ ] Test 1: Single user logs game with themselves vs opponent (both should update)\n- [ ] Test 2: Verify Elo changes are applied to all 4 players in doubles game\n- [ ] Test 3: Verify win/loss record updates for all players\n- [ ] Test 4: Verify streaks update correctly for both winners and losers\n- [ ] Test 5: Verify achievements are awarded to correct players\n- [ ] Test 6: Test with players that don't have streak columns yet (backward compatibility)\n- [ ] Test 7: Verify error message shown if any player profile doesn't exist\n- [ ] Test 8: Verify game appears in all players' game history, not just the logger's\n\n"}], "grading": null}, {"id": "eval-rls-bug-without_skill", "prompt": "I just built a feature where users can log pickleball games. It works when I test it myself but my friend says his stats never update after I log a game we played. Can you figure out what's going on?", "eval_id": 1, "outputs": [{"name": "report.md", "type": "text", "content": "# Pickleball App Bug Analysis: Friend's Stats Not Updating After Game Logged\n\n## Summary\nThe issue is **not** with the save-game logic or RLS policies themselves, but with how data freshness is handled across different users viewing each other's stats. When you log a game involving your friend, the database updates successfully, but your friend may not see the updated stats until they manually refresh their page.\n\n## Root Cause\n\nThe application uses **server-side rendering (SSR) with per-request data fetching** in Next.js. Pages like `/profile/[id]`, `/` (home), and `/leaderboard` are server-side rendered components that fetch data at request time using a Supabase client initialized with the ANON_KEY.\n\n### Data Update Flow\n1. **Log Game** \u2192 `app/log-game/page.tsx` client sends game data to `saveGame()` server action\n2. **Server Action** \u2192 `app/actions/save-game.ts` uses admin client to:\n   - Insert game record\n   - Insert game_players records\n   - Update player profiles (elo_rating, wins, losses, current_streak, longest_streak)\n3. **Admin Client Bypasses RLS** \u2192 Updates complete successfully server-side\n4. **Friend Views Profile** \u2192 Friend's browser requests `/profile/[id]` page\n5. **Server-Side Fetch** \u2192 The server fetches profile data at that moment\n   - **Problem**: If the friend loads the page BEFORE you return to their view, or if they have the page cached, they see stale data\n\n## Technical Details\n\n### Files Affected\n- `/app/log-game/page.tsx` - Client-side game form (works correctly)\n- `/app/actions/save-game.ts` - Server-side save logic (works correctly)\n- `/app/profile/[id]/page.tsx` - Profile display (causes staleness)\n- `/app/page.tsx` - Home page (causes staleness)\n- `/app/leaderboard/page.tsx` - Leaderboard (causes staleness)\n\n### The Issue Specifically\nIn `app/profile/[id]/page.tsx` lines 29-33:\n```typescript\nconst { data: profile } = await supabase\n  .from('profiles')\n  .select('*')\n  .eq('id', profileId)\n  .single()\n```\n\nThis is a **server-side async function** that fetches data when the page is requested. There's no cache invalidation mechanism:\n- No `revalidatePath()` call after `saveGame()` completes\n- No real-time subscription to profile changes\n- No manual refresh triggered for other users\n\n## Why It Works For You\n\nWhen you log a game as the creator, you see updated stats immediately because:\n1. The game is logged\n2. You're redirected to `/` (home page)\n3. The home page SSR request fetches fresh data from the database\n4. Your friend is not redirected anywhere - they see whatever was cached/previously rendered\n\n## Why It Doesn't Work For Your Friend\n\nYour friend's stats appear unchanged because:\n1. They may have already loaded their profile page or leaderboard\n2. The profile page was server-side rendered at that time with the old stats\n3. No mechanism exists to notify them of the update\n4. Refreshing their page WILL show the updated stats (proving the server-side update worked)\n\n## Evidence From Code\n\n### Save Game (Correctly Updates Database)\n`app/actions/save-game.ts` lines 114-120:\n```typescript\nconst { error: updateErr } = await admin.from('profiles').update({\n  elo_rating: newElo,\n  wins: player.wins + (data.won ? 1 : 0),\n  losses: player.losses + (data.won ? 0 : 1),\n  current_streak: newStreak,\n  longest_streak: newLongest,\n}).eq('id', playerId)\n```\nThis uses the admin client (`SUPABASE_SERVICE_ROLE_KEY`), which bypasses RLS entirely.\n\n### RLS Policies (Correctly Configured)\n`supabase-schema.sql` lines 49-50:\n```sql\ncreate policy \"Profiles are viewable by everyone\"\n  on public.profiles for select using (true);\n```\nAnyone can SELECT from profiles, so RLS is not the issue.\n\n### Page Rendering (No Cache Invalidation)\n`app/profile/[id]/page.tsx` is an async server component with no `revalidate` or `revalidatePath()` call after data changes.\n\n## Confirmation Test\n\nAsk your friend to:\n1. Open their profile page\n2. Have you log a game they played in\n3. Refresh their browser page (F5 or Cmd+R)\n4. Their updated stats WILL appear\n\nIf the stats update after refresh, this confirms the database is updating correctly and the issue is purely about page staleness.\n\n## Possible Causes\n\n1. **No Automatic Cache Invalidation** - Next.js doesn't know to revalidate pages when the database changes\n2. **No Real-Time Subscriptions** - The app doesn't use Supabase Realtime to push updates\n3. **Server-Side Rendering Without Refresh** - The page is rendered once and served to multiple users\n4. **No Redirect on Game Log** - You're redirected to `/`, but the friend viewing a specific profile isn't\n\n## Solution Options\n\n### Option 1: Use `revalidatePath()` (Recommended - Quick Fix)\nAfter the game is saved successfully, invalidate profile-related pages:\n```typescript\n// In saveGame() after successful update\nrevalidatePath('/leaderboard', 'page')\nrevalidatePath('/profile/[id]', 'page')\nrevalidatePath('/', 'page')\n```\n\n### Option 2: Add Realtime Subscriptions (Best UX)\nSubscribe to profile changes in components:\n```typescript\nconst supabase = createClient()\nuseEffect(() => {\n  const channel = supabase\n    .channel('profiles')\n    .on('postgres_changes', {\n      event: 'UPDATE',\n      schema: 'public',\n      table: 'profiles',\n      filter: `id=eq.${profileId}`\n    }, (payload) => setProfile(payload.new))\n    .subscribe()\n  return () => supabase.removeAllChannels()\n}, [profileId])\n```\n\n### Option 3: Implement Manual Refresh Button\nAdd a \"Refresh Stats\" button on profile pages that calls:\n```typescript\nrouter.refresh()\n```\n\n## Impact Assessment\n- **Severity**: Medium - Stats are correct in the database, just not visible until refresh\n- **Data Integrity**: High - No data corruption or loss occurs\n- **Affected Users**: Only players viewing each other's profiles after a game is logged\n- **Business Impact**: Players may think their stats aren't being recorded when they are\n\n## Conclusion\nThe bug is not a RLS (Row Level Security) issue or a data persistence issue. It's a **cache freshness and page revalidation issue**. The admin client correctly updates all player stats, and RLS policies correctly allow reading all profiles. The problem is that Next.js server-side rendered pages don't automatically refresh when database data changes.\n"}], "grading": null}, {"id": "eval-predeploy-with_skill", "prompt": "We're about to share this app with our friend group. Can you do a QA pass on the whole codebase before we deploy? I want to make sure there aren't any nasty surprises.", "eval_id": 2, "outputs": [{"name": "report.md", "type": "text", "content": "# QA Report: Pickleball App Pre-Deployment Audit\n\n**Date:** 2026-03-30\n**Scope:** Full-stack Next.js + Supabase application\n**Version:** Pre-deployment review\n\n---\n\n## Phase 1: Data Flow Mapping\n\n### Database Schema\nThree core tables with RLS enabled:\n- `profiles` (extends auth.users): id, username, full_name, elo_rating, wins, losses, created_at, current_streak, longest_streak\n- `games`: id, format (singles/doubles), team1_score, team2_score, created_by, played_at, created_at\n- `game_players`: id, game_id, player_id, team, elo_before, elo_change, won\n- `achievements`: player_id, achievement_key, earned_at (inferred from code)\n\n### Write Operations\n1. **Signup (Client Component)**\n   - Location: `app/login/page.tsx`, line 75-81\n   - Client: Browser client (`createBrowserClient`)\n   - Operation: `signUp()` with username/full_name metadata\n   - Trigger: User registration form\n   - Auto-creates profile via Postgres trigger `handle_new_user()`\n\n2. **Game Logging (Server Action)**\n   - Location: `app/actions/save-game.ts`, line 16-150\n   - Client: Admin client (`createAdminClient`) - **bypasses RLS**\n   - Operations:\n     - INSERT into `games` (line 66-70)\n     - INSERT into `game_players` x4-8 rows (line 80)\n     - UPDATE `profiles` x2-4 rows with Elo/wins/losses/streaks (line 114-120)\n     - INSERT into `achievements` (conditionally, line 143-145)\n   - Trigger: Form submission on `/log-game` page\n\n3. **Password Reset (Server Action)**\n   - Location: `app/actions/reset-password.ts`\n   - Client: Server client (line 24) for lookup, Admin client (line 81) for update\n   - Operations:\n     - SELECT from `profiles` (line 27-46) - case-insensitive lookup\n     - UPDATE auth.users password (line 83) - admin operation\n   - Trigger: Reset password form on `/reset-password` page\n\n4. **Sign Out (Server Action)**\n   - Location: `app/profile/[id]/page.tsx`, line 79-84\n   - Client: Server client\n   - Operation: `auth.signOut()`\n   - Trigger: Sign out button\n\n### Read Operations\n1. **Profiles**: Read from `profiles` table in leaderboard, profile, home pages\n2. **Games**: Read from `games` and `game_players` with nested joins in profile page and home page\n3. **Achievements**: Read from `achievements` table (assumed to exist) in profile page\n\n---\n\n## Phase 2: RLS Policy Audit\n\n### RLS Configuration\n**Profiles table:**\n- SELECT: `true` (anyone can read all profiles)\n- INSERT: `auth.uid() = id` (users can only insert their own profile, enforced by trigger)\n- UPDATE: `auth.uid() = id` (users can only update their own profile)\n\n**Games table:**\n- SELECT: `auth.role() = 'authenticated'` (any authenticated user can read)\n- INSERT: `auth.role() = 'authenticated'` (any authenticated user can insert)\n\n**Game_players table:**\n- SELECT: `auth.role() = 'authenticated'` (any authenticated user can read)\n- INSERT: `auth.role() = 'authenticated'` (any authenticated user can insert)\n\n**Achievements table:** (RLS status unknown, likely enabled based on schema pattern)\n\n### Critical Findings\n\n#### [CRITICAL] Schema Mismatch - Achievements Table Missing from Schema Definition\n- **File:** `supabase-schema.sql`\n- **Issue:** The code references an `achievements` table extensively (save-game.ts lines 88-145, profile page lines 38-44), but the table is not defined in the schema file provided. This creates a critical runtime error.\n- **Impact:** Game saving will fail when attempting to insert achievements. Achievements display will fail on profile pages.\n- **Evidence:**\n  - `save-game.ts:89` attempts to select from `achievements` table\n  - `profile/[id]/page.tsx:39` attempts to select from `achievements` table\n  - No CREATE TABLE statement for achievements in schema\n- **Fix:** Define the achievements table in schema:\n  ```sql\n  create table public.achievements (\n    id uuid primary key default gen_random_uuid(),\n    player_id uuid not null references public.profiles(id) on delete cascade,\n    achievement_key text not null,\n    earned_at timestamptz not null default now(),\n    unique(player_id, achievement_key)\n  );\n\n  alter table public.achievements enable row level security;\n  create policy \"Achievements viewable by authenticated users\"\n    on public.achievements for select using (auth.role() = 'authenticated');\n  create policy \"Authenticated users can insert achievements\"\n    on public.achievements for insert with check (auth.role() = 'authenticated');\n  ```\n\n#### [CRITICAL] Missing Schema Columns - Streak Tracking\n- **File:** `supabase-schema.sql`\n- **Issue:** The code uses `current_streak` and `longest_streak` columns extensively (save-game.ts lines 104-111, various pages), but these are not defined in the schema.\n- **Impact:** Game saving will fail with \"column does not exist\" error when attempting to update streaks.\n- **Evidence:**\n  - Multiple files reference `current_streak` and `longest_streak`\n  - Schema only defines: id, username, full_name, elo_rating, wins, losses, created_at\n- **Fix:** Add columns to profiles table:\n  ```sql\n  alter table public.profiles add column current_streak integer default 0;\n  alter table public.profiles add column longest_streak integer default 0;\n  ```\n\n#### [WARN] Admin Client Used for Multi-User Updates\n- **File:** `app/actions/save-game.ts`, lines 18, 100-120\n- **Issue:** While using the admin client is correct for bypassing RLS to update other players' ratings, the operation lacks transaction atomicity. If one player's update fails, the game record is already saved but other players' ratings won't update.\n- **Impact:** Inconsistent state where game exists but some players' ratings not updated.\n- **Risk Factors:** Network errors, database load, player count > 2\n- **Fix:** Use Supabase client transactions or move all updates into a single batch operation with error handling.\n\n---\n\n## Phase 3: Multi-User Operation Audit\n\n### Game Logging Atomic Operation Analysis\n\n**Scope:** When a game is logged, 2-4 players' profiles are updated plus achievement records.\n\n**Current Implementation** (`save-game.ts`):\n1. Fetch fresh player data (line 31-37)\n2. Calculate Elo changes (line 44-63)\n3. INSERT game record (line 66-70)\n4. INSERT game_players x4-8 (line 80)\n5. Fetch existing achievements (line 88-91)\n6. FOR EACH player: UPDATE profile + INSERT achievements (line 100-147)\n\n**Atomicity Issues:**\n\n#### [CRITICAL] Partial Failure Scenario - Game Record Created But Player Updates Fail\n- **Scenario:** Game inserted successfully (line 70), but then loop at line 100 fails updating player 2's profile (line 114).\n- **Current state:**\n  - Game record exists \u2713\n  - Game_players records exist \u2713\n  - Player 1 profile updated \u2713\n  - Player 2 profile NOT updated \u2717\n  - Leaderboard now shows inconsistent data\n- **Impact:** High - Players see wrong ratings, game logged twice to fix it, trust issues\n- **Fix:** Wrap the entire operation in a database transaction or Postgres function\n\n#### [WARN] Error Handling in Update Loop\n- **File:** `save-game.ts`, line 122-124\n- **Issue:** Update errors are only logged to console, not returned to client or rolled back\n- **Code:**\n  ```typescript\n  if (updateErr) {\n    console.error(`Failed to update profile for ${playerId}:`, updateErr)\n  }\n  ```\n- **Impact:** User receives success message even if updates failed for some players\n- **Fix:**\n  ```typescript\n  if (updateErr) {\n    return { error: `Failed to update rating for ${getPlayer(playerId).username}` }\n  }\n  ```\n\n#### [WARN] Race Condition - Stale Elo Streaks\n- **File:** `save-game.ts`, line 104\n- **Issue:** `current_streak` and `longest_streak` are read once at line 104, but if two games are logged simultaneously by the same player, the second request will use stale streak data.\n- **Scenario:**\n  1. Player A fetches profile with streak=2 at T1\n  2. Player B logs game (Player A wins) \u2192 streak=3 at T1+10ms\n  3. Player A logs second game simultaneously, still sees streak=2 \u2192 incorrectly sets to 3 instead of 4\n- **Impact:** Medium - Win streaks can be understated, achievement timing affected\n- **Fix:** After fetching initial player data, check current streak again just before update using optimistic locking or reload\n\n#### [CRITICAL] Missing Validation - Duplicate Player Submission\n- **File:** `app/actions/save-game.ts`, line 26-28\n- **Issue:** The validation correctly checks that players aren't on both teams, but doesn't verify the submitted player IDs actually belong to the game's participants in a real scenario. The function trusts the client's `createdBy` field without server-side verification.\n- **File:** `app/log-game/page.tsx`, line 104\n- **Issue:** `createdBy` is set to `currentUser?.id ?? ''`, which could be empty string\n- **Impact:** If currentUser is null (shouldn't happen with middleware, but edge case), empty string gets stored in games.created_by\n- **Fix:**\n  ```typescript\n  const { data: { user } } = await createClient().auth.getUser()\n  if (!user) return { error: 'Not authenticated' }\n  // Then use user.id, not from client\n  ```\n\n---\n\n## Phase 4: Client-Server Boundary Audit\n\n#### [WARN] Stale Client Data in Log Game Form\n- **File:** `app/log-game/page.tsx`, line 40-50\n- **Issue:** Player list is fetched once on component mount and cached in useState. If the app stays open for hours and new players are added, the selector won't show them.\n- **Current flow:**\n  1. Page loads, fetch all players (line 40-43)\n  2. User fills form over next 30 minutes\n  3. User submits - if new players were added, they won't appear in the form\n  4. Server action receives fresh player data (line 31-37 in save-game.ts) - OK, fresh\n- **Impact:** Low-Medium - UI stale, but server-side is fresh so data integrity OK. User confusion only.\n- **Fix:** Add a \"Refresh\" button to reload player list, or implement polling/subscription\n\n#### [WARN] Missing Auth Check in Log Game Page\n- **File:** `app/log-game/page.tsx`, line 38-39\n- **Issue:** Gets current user but doesn't redirect if null (unlike other pages)\n- **Impact:** Low - Middleware protects at route level, but pattern inconsistent\n- **Fix:** Add redirect check:\n  ```typescript\n  if (!user) redirect('/login')\n  ```\n\n#### [CRITICAL] Unverified createdBy Parameter\n- **File:** `app/log-game/page.tsx`, line 104\n- **Issue:** `currentUser?.id ?? ''` is sent to server. If currentUser loads as null, empty string is sent.\n- **File:** `app/actions/save-game.ts`, line 17\n- **Issue:** `createdBy` is received but never validated against auth context\n- **Attack scenario:** Malicious client could send any user ID\n- **Impact:** Games credited to wrong users, leaderboard integrity compromised\n- **Fix:** In save-game.ts:\n  ```typescript\n  export async function saveGame(input: SaveGameInput) {\n    const { data: { user } } = await createServerClient().auth.getUser()\n    if (!user) return { error: 'Not authenticated' }\n    // Force createdBy to authenticated user\n    const createdBy = user.id\n    // Don't trust input.createdBy\n  ```\n\n#### [INFO] Service Role Key Handling\n- **File:** `lib/supabase/admin.ts`\n- **Status:** \u2713 Correctly only used in server actions, not client components\n- **Status:** \u2713 Service role key not exposed in environment (requires SUPABASE_SERVICE_ROLE_KEY, not public)\n\n#### [INFO] Server vs Browser Client Usage\n- **Status:** \u2713 Browser client used only in client components (login, log-game)\n- **Status:** \u2713 Server client used in server components (pages, middleware)\n- **Status:** \u2713 Admin client used only in server actions\n\n---\n\n## Phase 5: Error Handling Audit\n\n#### [CRITICAL] Game Insertion Failure not Checked for Count\n- **File:** `app/actions/save-game.ts`, line 66-72\n- **Issue:** Checks `gameError` but doesn't verify the insert actually succeeded\n- **Code:**\n  ```typescript\n  const { data: game, error: gameError } = await admin\n    .from('games')\n    .insert({ format, team1_score: team2_score, team2_score, created_by: createdBy })\n    .select()\n    .single()\n  if (gameError || !game) return { error: 'Failed to save game.' }\n  ```\n- **Problem:** RLS might silently block the insert. `gameError` would be falsy but `game` would be null due to RLS rejection.\n- **Actually:** The code does check `!game`, so this is OK. \u2713\n\n#### [WARN] Missing Error Handling - Game Players Insert\n- **File:** `app/actions/save-game.ts`, line 80\n- **Issue:**\n  ```typescript\n  const { error: gpError } = await admin.from('game_players').insert(gamePlayers)\n  if (gpError) return { error: 'Failed to save game players.' }\n  ```\n- **Gap:** Game already inserted; if this fails, game exists with no players\n- **Impact:** Medium - Game orphaned but data not completely inconsistent\n- **Fix:** Wrap in transaction or add rollback logic\n\n#### [WARN] Reset Password - Silent Failure on User Lookup\n- **File:** `app/actions/reset-password.ts`, line 27-47\n- **Issue:** `.single()` on line 31 will throw if no results, but error is caught and swallowed\n- **Code:**\n  ```typescript\n  const { data: userByUsername } = await supabase\n    .from('profiles')\n    .select('id, full_name, username')\n    .ilike('username', identifier)\n    .single()  // Throws error if 0 or >1 rows\n  if (userByUsername) { ... }\n  ```\n- **Problem:** `.single()` will return an error if no row found. This error is ignored.\n- **Actually:** Check the code more carefully - it assigns to `data` and `error`, and only checks `if (userByUsername)`, so the error is silently ignored. \u2713\n- **Behavior:** If no user found, it tries the full_name query. Good fallback.\n\n#### [INFO] User-Facing Errors\n- **Status:** \u2713 Most errors are returned to user: \"Failed to save game\", \"Scores cannot be tied\", etc.\n- **Status:** \u2713 Password errors displayed: \"Password must be at least 6 characters\"\n\n#### [WARN] Loading State on Reset Password\n- **File:** `app/reset-password/page.tsx`, line 63\n- **Issue:** If updatePassword fails, loading is set to false (line 77). \u2713\n- **Status:** OK - all branches handle setLoading(false)\n\n#### [INFO] Redirect Safety\n- **Status:** \u2713 `redirect()` used correctly in server components, outside try/catch\n\n---\n\n## Phase 6: Type Safety & Edge Cases\n\n#### [WARN] Optional Chaining Gaps - Profile Fields\n- **File:** `app/profile/[id]/page.tsx`, line 31-32\n- **Issue:**\n  ```typescript\n  const { data: profile } = await supabase.from('profiles').select('*').eq('id', profileId).single()\n  if (!profile) redirect('/')\n  ```\n- **Status:** \u2713 Checked before use\n\n#### [WARN] Optional Chaining - Game Players\n- **File:** `app/page.tsx`, line 117-120\n- **Issue:**\n  ```typescript\n  const opponents = game.game_players\n    ?.filter((p: any) => p.team !== gp.team)\n    .map((p: any) => p.profile?.full_name?.split(' ')[0] ?? p.profile?.username)\n    .join(' & ')\n  ```\n- **Status:** \u2713 Uses optional chaining correctly, falls back to 'Unknown' if none found\n\n#### [CRITICAL] Division by Zero - Win Rate Calculation\n- **File:** `app/leaderboard/page.tsx`, line 38\n- **Code:**\n  ```typescript\n  const total = player.wins + player.losses\n  const winRate = total > 0 ? Math.round((player.wins / total) * 100) : 0\n  ```\n- **Status:** \u2713 Safe - checks total > 0\n\n- **File:** `app/page.tsx`, line 30-32\n- **Code:**\n  ```typescript\n  const winRate = profile && (profile.wins + profile.losses) > 0\n    ? Math.round((profile.wins / (profile.wins + profile.losses)) * 100)\n    : 0\n  ```\n- **Status:** \u2713 Safe\n\n#### [WARN] Empty State - No Games\n- **File:** `app/profile/[id]/page.tsx`, line 177-180\n- **Issue:** Head-to-head section won't display if no games, which is correct\n- **Status:** \u2713 Handled with conditional `if (Object.keys(h2h).length > 0)`\n\n#### [WARN] Array Index Access - Doubles Mode\n- **File:** `app/actions/save-game.ts`, line 52-58\n- **Code:**\n  ```typescript\n  const [p1a, p1b] = [getPlayer(team1Ids[0]), getPlayer(team1Ids[1])]\n  const [p2a, p2b] = [getPlayer(team2Ids[0]), getPlayer(team2Ids[1])]\n  ```\n- **Issue:** Assumes indices [0] and [1] exist\n- **Context:** Earlier validation (line 22-24) ensures `team1Ids.length === 2` for doubles\n- **Status:** \u2713 Safe due to validation\n\n#### [CRITICAL] getPlayer() Unsafe Access Pattern\n- **File:** `app/actions/save-game.ts`, line 39\n- **Code:**\n  ```typescript\n  const getPlayer = (id: string) => players.find(p => p.id === id)!\n  ```\n- **Issue:** Uses non-null assertion `!` without verification\n- **Context:** Assumes all IDs in allIds exist in fetched players\n- **Status:** \u2713 Safe because line 36 checks `players.length !== allIds.length`\n\n#### [WARN] Streak Calculation Logic\n- **File:** `app/actions/save-game.ts`, line 106-110\n- **Code:**\n  ```typescript\n  if (data.won) {\n    newStreak = prevStreak > 0 ? prevStreak + 1 : 1\n  } else {\n    newStreak = prevStreak < 0 ? prevStreak - 1 : -1\n  }\n  ```\n- **Logic check:**\n  - If won and prevStreak > 0: increment \u2713\n  - If won and prevStreak <= 0: reset to 1 \u2713\n  - If lost and prevStreak < 0: decrement (make more negative) \u2713\n  - If lost and prevStreak >= 0: reset to -1 \u2713\n- **Status:** \u2713 Correct\n\n#### [INFO] Elo Calculation - Division in Average\n- **File:** `lib/elo.ts`, line 54\n- **Code:**\n  ```typescript\n  const team1Avg = Math.round((team1Ratings[0] + team1Ratings[1]) / 2)\n  ```\n- **Division by two:** Always safe, never 0\n- **Status:** \u2713 Safe\n\n#### [WARN] Missing Type for Achievements Fetch\n- **File:** `app/profile/[id]/page.tsx`, line 38-42\n- **Issue:** Achievements table schema unknown - type inference fails\n- **Impact:** TypeScript won't catch schema mismatch errors\n- **Status:** \u26a0\ufe0f Type safety degraded due to missing schema\n\n---\n\n## Critical Issues Summary\n\n### Must Fix Before Deployment\n\n1. **[CRITICAL] Missing achievements table** - Entire game logging fails\n   - File: `supabase-schema.sql`\n   - Solution: Add achievements table definition\n   - Severity: \ud83d\udd34 Blocks deployment\n\n2. **[CRITICAL] Missing current_streak and longest_streak columns** - Game updates fail\n   - File: `supabase-schema.sql`\n   - Solution: Add columns to profiles table\n   - Severity: \ud83d\udd34 Blocks deployment\n\n3. **[CRITICAL] Unverified createdBy parameter** - Game integrity compromised\n   - File: `app/actions/save-game.ts`\n   - Solution: Get authenticated user server-side, ignore client input\n   - Severity: \ud83d\udd34 Security issue\n\n4. **[CRITICAL] Partial failure not rolled back** - Inconsistent game state possible\n   - File: `app/actions/save-game.ts`\n   - Solution: Implement transaction or check all updates succeed\n   - Severity: \ud83d\udd34 Data integrity\n\n### Warnings - High Priority\n\n5. **[WARN] Error on profile update not propagated** - Silent failures in game logging\n   - File: `app/actions/save-game.ts` line 122-124\n   - Solution: Return error to client if any update fails\n   - Severity: \ud83d\udfe0 Operational issue\n\n6. **[WARN] Missing auth check in log-game page** - Inconsistent pattern\n   - File: `app/log-game/page.tsx`\n   - Solution: Add redirect if !user\n   - Severity: \ud83d\udfe0 Code quality\n\n7. **[WARN] Stale client data in player selection** - UX issue\n   - File: `app/log-game/page.tsx` line 40-50\n   - Solution: Add refresh button or implement polling\n   - Severity: \ud83d\udfe1 Minor UX issue\n\n8. **[WARN] Race condition on streak updates** - Streak accuracy during concurrent games\n   - File: `app/actions/save-game.ts` line 104\n   - Solution: Re-fetch or use optimistic locking\n   - Severity: \ud83d\udfe1 Edge case\n\n---\n\n## Recommendations\n\n### Before Deployment\n\n1. **Add missing schema definitions** - Update `supabase-schema-update.sql` with:\n   - achievements table with proper RLS\n   - current_streak and longest_streak columns\n\n2. **Fix authentication boundary** - Get authenticated user in save-game.ts server action, don't trust client\n\n3. **Implement transaction wrapper** - Wrap game logging in a database transaction or Postgres function\n\n4. **Add update validation** - Check error on each profile update, return to client if any fails\n\n### Recommended Additional Features (Post-Launch)\n\n1. Add refresh button to player selector in log-game page\n2. Implement optimistic locking or version control for concurrent streak updates\n3. Add audit logging for all game modifications\n4. Implement undo/edit functionality for recently logged games\n5. Add database constraints to prevent duplicate game entries\n\n### Testing Checklist\n\n- [ ] Verify new players can be added to both teams\n- [ ] Test doubles game with 4 different players\n- [ ] Verify Elo changes correctly for both winners and losers\n- [ ] Check that all 4 players' profiles update (not just some)\n- [ ] Test with 0 prior games (edge case for streaks)\n- [ ] Verify achievements appear after game logging\n- [ ] Test reset password with exact username match\n- [ ] Test reset password with partial name match\n- [ ] Verify leaderboard updates immediately after game\n- [ ] Test with concurrent game submissions\n\n---\n\n## Conclusion\n\nThe app has a solid architecture with proper use of server actions and RLS, but **cannot be deployed** in its current state due to:\n\n1. **Missing database schema** - achievements table and streak columns don't exist\n2. **Authentication boundary violation** - createdBy parameter not verified server-side\n3. **Partial failure scenario** - game records can be created without all player updates\n\nOnce these 3 critical issues are resolved, the app is ready for a friend group launch. The codebase is well-structured with good error messages and proper separation of concerns.\n\n"}], "grading": null}, {"id": "eval-predeploy-without_skill", "prompt": "We're about to share this app with our friend group. Can you do a QA pass on the whole codebase before we deploy? I want to make sure there aren't any nasty surprises.", "eval_id": 2, "outputs": [{"name": "report.md", "type": "text", "content": "# Pickleball App - Pre-Deployment QA Report\n\n**App Name:** Tickle my Pickle\n**Date:** 2026-03-30\n**Scope:** Full codebase review for bugs, security issues, and production readiness\n\n---\n\n## Executive Summary\n\nThe pickleball app is a Next.js 15 / React 19 application with Supabase backend for tracking pickleball games, ratings (Elo-based), achievements, and player statistics. The codebase is generally well-structured with TypeScript throughout, but there are several critical issues that must be addressed before deploying to a friend group.\n\n**Critical Issues Found:** 5\n**High Priority Issues:** 7\n**Medium Priority Issues:** 4\n**Low Priority Issues:** 3\n\n---\n\n## Critical Issues\n\n### 1. **Exposed Service Role Key in Environment File**\n**File:** `.env.local`\n**Severity:** CRITICAL - Security Vulnerability\n\nThe `.env.local` file contains:\n```\nSUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here\n```\n\n**Problem:**\n- The service role key is a placeholder and not configured\n- If this file is ever committed to git with a real key, it exposes admin access to the entire Supabase database\n- The comment says \"Keep this SECRET - never prefix with NEXT_PUBLIC_\" but the file is not in `.gitignore`\n\n**Impact:**\n- Anyone with access to the repository can read database secrets\n- Admin-level database access would be compromised\n\n**Action Required:**\n1. Ensure `.env.local` is in `.gitignore`\n2. Use proper deployment secret management (Vercel secrets, environment variables, etc.)\n3. Never commit real service keys to the repository\n4. Verify the placeholder key is set correctly before deployment\n\n---\n\n### 2. **Missing Service Role Key Configuration**\n**File:** `lib/supabase/admin.ts`\n**Severity:** CRITICAL - Runtime Failure\n\nThe admin client requires `SUPABASE_SERVICE_ROLE_KEY` environment variable:\n```typescript\nexport function createAdminClient() {\n  return createClient(\n    process.env.NEXT_PUBLIC_SUPABASE_URL!,\n    process.env.SUPABASE_SERVICE_ROLE_KEY!,  // <- Will crash if not set\n    { auth: { autoRefreshToken: false, persistSession: false } }\n  )\n}\n```\n\n**Problem:**\n- The `.env.local` file has `your_service_role_key_here` as placeholder\n- The non-public assertion (`!`) will throw if the variable is missing\n- Game logging and password resets will completely fail when deployed\n\n**Impact:**\n- Core features (save-game, reset-password) will crash in production\n- Users cannot log games or reset passwords\n\n**Action Required:**\n1. Obtain real service role key from Supabase dashboard\n2. Set it in deployment environment secrets (NOT in code)\n3. Add runtime validation to give a clear error message if missing\n\n---\n\n### 3. **Password Reset Allows Enumeration Attack**\n**File:** `app/actions/reset-password.ts` - `findUserByIdentifier()`\n**Severity:** CRITICAL - Security Vulnerability\n\n```typescript\nconst { data: userByUsername } = await supabase\n  .from('profiles')\n  .select('id, full_name, username')\n  .ilike('username', identifier)\n  .single()\n\n// If not found via username, tries full_name with wildcard\nconst { data: userByFullName } = await supabase\n  .from('profiles')\n  .select('id, full_name, username')\n  .ilike('full_name', `%${identifier}%`)\n```\n\n**Problem:**\n- The function returns different responses based on whether a user exists\n- An attacker can enumerate all user accounts by checking if usernames/names exist\n- This is a classic user enumeration vulnerability\n- Makes social engineering attacks easier\n\n**Impact:**\n- Privacy: Attackers can build a list of all players\n- Security: Attackers know which accounts to target for brute force\n\n**Action Required:**\n1. Always return the same response (e.g., \"Account found\" or generic \"Check your email\")\n2. Log suspicious enumeration attempts\n3. Consider adding rate limiting to the reset-password endpoint\n\n---\n\n### 4. **Admin Client Can Bypass All Row-Level Security**\n**File:** `app/actions/save-game.ts`\n**Severity:** CRITICAL - Data Integrity Risk\n\n```typescript\n// Line 98: \"admin client \u2014 bypasses RLS\"\nconst result = await saveGame({\n  format,\n  team1Score: s1,\n  team2Score: s2,\n  team1Ids: t1,\n  team2Ids: t2,\n  createdBy: currentUser?.id ?? '',  // <- Could be empty string\n})\n```\n\n**Problem:**\n- While the admin client is necessary for some operations, there's minimal validation\n- `createdBy` can be an empty string if `currentUser` is null\n- No server-side re-validation of which players can be added to a game\n- A user could theoretically call this with a modified `team1Ids`/`team2Ids` containing any player ID\n\n**Impact:**\n- Data corruption: Games recorded with wrong players\n- Cheating: Users could fabricate game results\n- Rating manipulation: Elo ratings could be artificially inflated\n\n**Action Required:**\n1. Add server-side re-authentication to verify `createdBy` matches the authenticated user\n2. Validate that all player IDs exist and are valid\n3. Add transaction/rollback logic in case any insert fails\n4. Log all game mutations for audit trail\n\n---\n\n### 5. **Error Handling Swallows Critical Failures Silently**\n**File:** `app/actions/save-game.ts` - line 122-124\n**Severity:** CRITICAL - Silent Data Corruption\n\n```typescript\nif (updateErr) {\n  console.error(`Failed to update profile for ${playerId}:`, updateErr)\n  // <- Continues anyway! Game is recorded but player stats not updated\n}\n```\n\n**Problem:**\n- When updating a player's Elo rating fails, the function continues\n- The game is already inserted, but the player's profile is not updated\n- This creates a state where game records and player stats are out of sync\n- Game achievements might not be recorded either\n\n**Impact:**\n- Elo ratings become incorrect and unreliable\n- Achievements might not unlock\n- Leaderboard becomes inaccurate\n- Data consistency is broken\n\n**Action Required:**\n1. Wrap the entire operation in a transaction\n2. Rollback the game insert if any player update fails\n3. Return an error instead of silently continuing\n4. Add monitoring/alerting for these failures\n\n---\n\n## High Priority Issues\n\n### 6. **No Input Validation on Score Submission**\n**File:** `app/log-game/page.tsx` - line 81-83\n**Severity:** HIGH\n\n```typescript\nconst s1 = parseInt(score1), s2 = parseInt(score2)\nif (isNaN(s1) || isNaN(s2)) return setError('Enter valid scores.')\nif (s1 === s2) return setError('Scores cannot be tied.')\n```\n\n**Problem:**\n- No upper bound check - someone could submit `score1=999999`\n- No validation that scores are reasonable\n- parseInt could accept values like \"123abc\" (returns 123)\n- Negative scores aren't rejected (parseInt(\"-5\") returns -5)\n\n**Action Required:**\n1. Add bounds checking: `if (s1 < 0 || s1 > 99 || s2 < 0 || s2 > 99)`\n2. Standardize pickleball scoring rules (usually first to 11, win by 2)\n3. Document expected score range in comments\n4. Consider standard game lengths (e.g., must be 11-21)\n\n---\n\n### 7. **Missing CSRF Protection on Form Submissions**\n**File:** `app/profile/[id]/page.tsx` - line 79-84\n**Severity:** HIGH\n\n```typescript\nasync function signOut() {\n  'use server'\n  const supabase = await createClient()\n  await supabase.auth.signOut()\n  redirect('/login')\n}\n```\n\n**Problem:**\n- The signOut action is exposed as a form action but has no CSRF token validation\n- A malicious site could trick users into signing out\n- Next.js does provide some CSRF protection, but it's not explicit here\n- No confirmation before sign-out\n\n**Action Required:**\n1. Add explicit CSRF token verification (Next.js does this, but make it clear)\n2. Add a confirmation dialog: \"Are you sure you want to sign out?\"\n3. Consider adding a POST-redirect-GET pattern for security\n4. Add event logging for sign-out events\n\n---\n\n### 8. **No Rate Limiting on Game Logging**\n**File:** `app/log-game/page.tsx` + `app/actions/save-game.ts`\n**Severity:** HIGH - Abuse/DoS Risk\n\n**Problem:**\n- Any authenticated user can submit unlimited games in rapid succession\n- No rate limiting per user, per game, or per endpoint\n- Could be used to spam the leaderboard or artificially inflate stats\n- No cooldown between game submissions\n\n**Impact:**\n- Rating manipulation/cheating\n- Database abuse\n- Leaderboard spam\n\n**Action Required:**\n1. Implement rate limiting (e.g., max 1 game per minute per user)\n2. Add database constraints/triggers if possible\n3. Log suspicious activity (rapid game submissions)\n4. Consider adding a time window (e.g., games must be spaced by 5 minutes)\n\n---\n\n### 9. **Unvalidated Elo Calculation for Edge Cases**\n**File:** `lib/elo.ts`\n**Severity:** HIGH\n\n```typescript\nconst K = 48  // Fixed K value, no documentation on why\n\nexport function expectedScore(ratingA: number, ratingB: number): number {\n  return 1 / (1 + Math.pow(10, (ratingB - ratingA) / 400))\n}\n```\n\n**Problem:**\n- K value is hardcoded with no documentation or explanation\n- No handling for extreme Elo differences (e.g., 5000 vs 500)\n- Could produce unexpected changes in fringe cases\n- No min/max bounds on ratings\n\n**Action Required:**\n1. Document why K=48 (is this appropriate for pickleball?)\n2. Add bounds checking: ratings should never go negative or exceed reasonable max\n3. Test edge cases: very high/low rating differences\n4. Consider different K values based on experience (higher K for newer players)\n\n---\n\n### 10. **Leaderboard Allows Anonymous Viewing Without Validation**\n**File:** `app/leaderboard/page.tsx`\n**Severity:** HIGH - Information Disclosure\n\n**Problem:**\n- Every player's full name, username, rating, win/loss record, and current streak is public\n- No privacy controls or opt-out mechanism\n- GDPR concerns (personal data displayed without consent)\n- Could enable stalking/harassment of players\n\n**Impact:**\n- Privacy violations\n- Compliance issues (GDPR, privacy laws)\n- Potential for targeted harassment\n\n**Action Required:**\n1. Add privacy settings per user (e.g., \"Hide from leaderboard\")\n2. Show only username + Elo if player prefers privacy\n3. Add data retention policy documentation\n4. Consider regional privacy regulations\n\n---\n\n### 11. **No Audit Logging for Critical Operations**\n**File:** `app/actions/save-game.ts` + `app/actions/reset-password.ts`\n**Severity:** HIGH - Compliance/Forensics\n\n**Problem:**\n- No logging of who changed passwords\n- No logging of games being recorded\n- No ability to audit suspicious activity\n- Cannot trace back issues to user actions\n\n**Impact:**\n- Cannot investigate cheating or abuse\n- No forensic trail for disputes\n- Compliance issues\n\n**Action Required:**\n1. Add audit logging for: password resets, game submissions, rating changes\n2. Include: user ID, timestamp, old/new values, IP address\n3. Create audit log retention policy\n4. Implement admin dashboard to view logs\n\n---\n\n### 12. **Password Reset Lacks Email Verification**\n**File:** `app/actions/reset-password.ts`\n**Severity:** HIGH - Account Takeover Risk\n\n```typescript\nexport async function updatePassword(userId: string, newPassword: string) {\n  // Directly updates password without email confirmation\n  const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, {\n    password: newPassword,\n  })\n}\n```\n\n**Problem:**\n- Anyone who knows a username can reset their password\n- No email verification step\n- No confirmation sent to the user\n- No way to prevent unauthorized password changes\n\n**Impact:**\n- Account takeover: Users can hijack any account they know the username for\n- Users won't know their passwords changed until they try to log in\n\n**Action Required:**\n1. Send a confirmation email before resetting\n2. Require a confirmation token (emailed link)\n3. Add a time limit on reset tokens (e.g., 1 hour)\n4. Log password reset attempts\n5. Consider security questions as additional verification\n\n---\n\n## Medium Priority Issues\n\n### 13. **Missing Validation on Player Selection in Log Game**\n**File:** `app/log-game/page.tsx` - line 66-70\n**Severity:** MEDIUM\n\n```typescript\nfunction optionsFor(team: 1 | 2, slot: 0 | 1): Player[] {\n  const currentValue = (team === 1 ? team1 : team2)[slot]\n  const otherSelected = allSelected.filter(id => id !== currentValue)\n  return allPlayers.filter(p => !otherSelected.includes(p.id))\n}\n```\n\n**Problem:**\n- Validates on the client side only\n- Client-side validation can be bypassed\n- The server (save-game.ts) does validate but assumes client validation passed\n\n**Action Required:**\n1. Add server-side re-validation that player IDs are valid and exist\n2. Verify players aren't duplicated\n3. Ensure all required players are present before processing\n\n---\n\n### 14. **Achievement Logic Triggers on Fringe Cases**\n**File:** `lib/achievements.ts` - line 110, 116\n**Severity:** MEDIUM\n\n```typescript\nif (!has('upset_artist') && wonGame && opponentEloAvg >= prevElo + 100) {\n  earned.push('upset_artist')  // Requires winning against 100+ higher rated opponent\n}\n\nif (!has('comeback_kid') && wonGame && prevStreak <= -3) {\n  earned.push('comeback_kid')  // Requires beating -3 streak\n}\n```\n\n**Problem:**\n- \"Upset artist\" doesn't verify the player actually beat a higher-rated player (opponentEloAvg might be artificially low if one opponent is very low rated)\n- No protection against gaming achievements through deliberately losing then winning\n- Logic assumes games are always fair and not manipulated\n\n**Impact:**\n- Users might unlock achievements undeservedly\n- Achievements don't reflect actual skill\n\n**Action Required:**\n1. Add additional validation: verify opponent ratings are reasonable\n2. Log achievement unlocks for review\n3. Add admin ability to revoke achievements if cheating detected\n4. Document achievement criteria clearly\n\n---\n\n### 15. **Inconsistent Null Coalescing in Display**\n**File:** Multiple files (page.tsx, leaderboard, profile)\n**Severity:** MEDIUM - UX Issue\n\n```typescript\n// Different patterns used throughout:\nprofile?.full_name ?? profile?.username ?? '?'\n{player.full_name ?? player.username}\nprofile?.full_name?.split(' ')[0] ?? 'Player'\n```\n\n**Problem:**\n- Inconsistent handling of missing data\n- Some places show \"?\" other places show \"Player\"\n- Could confuse users about what's a real name vs placeholder\n\n**Action Required:**\n1. Define consistent null-coalescing strategy\n2. Use the same fallback text everywhere\n3. Add type safety: ensure names are never null in database\n4. Consider making username required for display\n\n---\n\n### 16. **No Loading State Feedback on Initial Page Load**\n**File:** `app/log-game/page.tsx` - line 36-51\n**Severity:** MEDIUM - UX Issue\n\n```typescript\nconst [allPlayers, setAllPlayers] = useState<Player[]>([])\n\nuseEffect(() => {\n  async function load() {\n    // No loading state while fetching players\n    const { data: players } = await supabase.from('profiles').select(...)\n  }\n  load()\n}, [])\n```\n\n**Problem:**\n- Page shows empty dropdowns while players load\n- No loading spinner or skeleton\n- User doesn't know if data is loading or if there are no players\n\n**Action Required:**\n1. Add loading state: `const [isLoading, setIsLoading] = useState(true)`\n2. Show skeleton loaders while data loads\n3. Display appropriate feedback while waiting\n\n---\n\n## Low Priority Issues\n\n### 17. **Hardcoded Pickle Emoji Throughout App**\n**File:** Multiple files\n**Severity:** LOW - Code Quality\n\n**Problem:**\n- Pickle emoji \"\ud83e\udd52\" is hardcoded in many places\n- Should be a constant for easy theming\n\n**Action Required:**\n1. Create a constants file: `lib/constants.ts`\n2. Export emoji constants\n3. Use them throughout app\n\n---\n\n### 18. **No TypeScript Strict Null Checks on Game Data**\n**File:** `app/page.tsx` - line 113\n**Severity:** LOW - Type Safety\n\n```typescript\n{recentGamePlayers.map((gp: any) => {  // <- 'any' type\n  const game = gp.game\n  const won = gp.won\n  // ...\n})}\n```\n\n**Problem:**\n- Using `any` type bypasses TypeScript safety\n- Could miss null/undefined issues at compile time\n\n**Action Required:**\n1. Define proper types for game player data\n2. Remove `any` types\n3. Enable stricter TypeScript settings\n\n---\n\n### 19. **No Manifest Update for PWA**\n**File:** `public/manifest.json`\n**Severity:** LOW - Feature Completeness\n\n**Problem:**\n- Login page has PWA install instructions\n- manifest.json likely exists but wasn't shown in file list\n- Should ensure PWA is properly configured for deployment\n\n**Action Required:**\n1. Verify manifest.json exists and is correct\n2. Test PWA installation on iOS and Android\n3. Add service worker for offline support (optional)\n4. Test on real devices before deploying to friend group\n\n---\n\n## Configuration & Deployment Issues\n\n### Missing Pre-Deployment Checklist\n**Severity:** HIGH\n\nBefore deploying, verify:\n\n1. **Environment Variables**\n   - [ ] `NEXT_PUBLIC_SUPABASE_URL` is set to production Supabase project\n   - [ ] `NEXT_PUBLIC_SUPABASE_ANON_KEY` is correct for production\n   - [ ] `SUPABASE_SERVICE_ROLE_KEY` is set in deployment secrets (Vercel, etc.)\n   - [ ] `.env.local` is in `.gitignore`\n\n2. **Database**\n   - [ ] Row-level security (RLS) policies are properly configured\n   - [ ] Indexes exist on frequently queried columns (player_id, user_id, elo_rating)\n   - [ ] Backup strategy is in place\n   - [ ] Data validation constraints are set in the database\n\n3. **Security**\n   - [ ] HTTPS is enforced\n   - [ ] CORS is properly configured\n   - [ ] No secrets in logs\n   - [ ] Rate limiting is implemented\n\n4. **Performance**\n   - [ ] Images are optimized\n   - [ ] Database queries are efficient (test with many records)\n   - [ ] Pages load in under 3 seconds on slow 3G\n\n5. **Monitoring**\n   - [ ] Error tracking is set up (Sentry, etc.)\n   - [ ] Database performance monitoring is active\n   - [ ] Uptime monitoring is configured\n\n---\n\n## Summary of Fixes Required\n\n| Severity | Count | Action |\n|----------|-------|--------|\n| CRITICAL | 5     | Must fix before any deployment |\n| HIGH     | 7     | Must fix before friend group deployment |\n| MEDIUM   | 4     | Fix before public deployment |\n| LOW      | 3     | Nice to have, can be deferred |\n\n---\n\n## Recommended Action Plan\n\n### Phase 1: Critical Fixes (Do immediately)\n1. Configure real `SUPABASE_SERVICE_ROLE_KEY` in deployment environment\n2. Fix password reset to require email verification\n3. Add transaction rollback logic to save-game\n4. Implement user enumeration protection in password reset\n5. Add server-side re-authentication to save-game\n\n### Phase 2: High Priority (Before friend group deployment)\n1. Implement rate limiting on game submissions\n2. Add audit logging for critical operations\n3. Add privacy controls to leaderboard\n4. Add score bounds validation\n5. Document Elo calculation and K value\n\n### Phase 3: Medium Priority (Before wider use)\n1. Fix null coalescing inconsistencies\n2. Add achievement manipulation detection\n3. Improve loading states on pages\n\n### Phase 4: Low Priority (Polish)\n1. Extract emoji constants\n2. Remove TypeScript `any` types\n3. Verify PWA configuration\n\n---\n\n## Conclusion\n\nThe app has a solid foundation with modern tech stack and good UI, but has several critical security and data integrity issues that must be fixed before deploying to a friend group. The most urgent issues are:\n\n1. Service role key configuration\n2. Password reset security\n3. Data integrity in game logging\n4. User enumeration vulnerability\n\nOnce these are addressed, the app will be much safer for production use. Start with Phase 1 (Critical) fixes immediately, then work through Phase 2 before sharing with friends.\n\n**Recommendation:** Do NOT deploy until all CRITICAL and HIGH priority items are addressed.\n"}], "grading": null}, {"id": "eval-achievements-with_skill", "prompt": "I just added achievements and streaks to my pickleball app. Can you check if the achievement logic has any bugs? I'm worried some achievements might not trigger correctly or might award duplicates.", "eval_id": 3, "outputs": [{"name": "report.md", "type": "text", "content": "# QA Report: Achievement System Audit\n\n## Executive Summary\n\nThe achievement system contains **one critical bug** affecting duplicate prevention and **two warnings** about edge cases and potential race conditions. The critical issue can cause achievements to be awarded multiple times if a player earns different achievements in quick succession, and may allow achievements to bypass the UNIQUE constraint that's intended to prevent duplicates.\n\n---\n\n## Phase 1: Data Flow Mapping\n\n### Database Tables\n- `profiles` (id, username, full_name, elo_rating, wins, losses, current_streak, longest_streak)\n- `achievements` (id, player_id, achievement_key, earned_at, UNIQUE constraint on (player_id, achievement_key))\n- `games` (id, format, team1_score, team2_score, created_by, played_at, created_at)\n- `game_players` (id, game_id, player_id, team, elo_before, elo_change, won)\n\n### Write Operations\n\n1. **save-game.ts (server action, admin client)**\n   - Insert into `games` (line 66-70)\n   - Insert into `game_players` (line 80-81)\n   - Update `profiles` for each player (line 114-120)\n   - Insert into `achievements` for newly earned achievements (line 143-145)\n\n2. **log-game/page.tsx (client component)**\n   - Calls `saveGame` server action (line 98)\n   - No direct database writes from client\n\n### Read Operations\n\n1. **save-game.ts**\n   - Fetch player profiles (line 31-34)\n   - Fetch existing achievements (line 88-91)\n   - Validate player count and team composition (lines 22-28, 55-56)\n\n2. **profile/[id]/page.tsx**\n   - Fetch profile (line 29-33)\n   - Fetch achievements (line 38-42)\n   - Fetch game history (line 47-56)\n\n---\n\n## Phase 2: RLS Policy Audit\n\n### Client Type Analysis\n- `save-game.ts` uses **admin client** (service role key) \u2192 **bypasses RLS entirely**\n- `profile/[id]/page.tsx` uses **server client** \u2192 **subject to RLS**\n\n### RLS Policy Review\n\n**Achievements table policies:**\n```sql\nCREATE POLICY \"Anyone can read achievements\"\n  ON achievements FOR SELECT\n  USING (auth.role() = 'authenticated');\n\nCREATE POLICY \"Authenticated users can insert achievements\"\n  ON achievements FOR INSERT\n  WITH CHECK (auth.role() = 'authenticated');\n```\n\nSince the save-game action uses the admin client, RLS is bypassed for inserts. However, the UNIQUE constraint on (player_id, achievement_key) is still enforced at the database level.\n\n**Finding:** RLS is correctly configured for read operations. Admin client is appropriate for multi-player updates.\n\n---\n\n## Phase 3: Multi-User Operation Audit\n\n### Critical Bug: Race Condition in Achievement Insertion\n\n**Location:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 126-146\n\n**The Problem:**\n\nThe code fetches existing achievements once at the start (lines 88-91), then loops through each player to check and award achievements (lines 100-147). Within this loop, there is a critical race condition:\n\n```typescript\n// Line 88-91: Fetch ONCE at the start\nconst { data: existingAchievements } = await admin\n  .from('achievements')\n  .select('player_id, achievement_key')\n  .in('player_id', allIds)\n\n// Lines 100-147: For each player...\nfor (const [playerId, data] of Object.entries(eloChanges)) {\n  // ... calculate newStreak, newElo, totalGames ...\n\n  // Line 130-140: Check achievements\n  const newAchievements = checkNewAchievements({\n    // ... uses cached alreadyEarnedByPlayer data\n    alreadyEarned: alreadyEarnedByPlayer[playerId] ?? [],\n  })\n\n  // Line 142-145: Insert achievements\n  if (newAchievements.length > 0) {\n    await admin.from('achievements').insert(\n      newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))\n    )\n  }\n}\n```\n\n**Scenario:** A player wins multiple games in rapid succession:\n1. Game 1 logs: triggers `hot_streak_3` achievement (first win + 2 prior wins = 3 streak)\n2. Game 2 logs simultaneously: fetches achievements from database (gets snapshot before Game 1 insert completes), doesn't see the newly-earned achievement, grants `hot_streak_3` again\n3. Result: **`hot_streak_3` awarded twice, violating the UNIQUE constraint**\n\nEven worse, the code does **not check the result** of the `.insert()` call:\n```typescript\nif (newAchievements.length > 0) {\n  await admin.from('achievements').insert(\n    newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))\n  )\n  // No error checking, no count verification\n}\n```\n\nIf the database insert fails due to the UNIQUE constraint violation, **the error is silently swallowed**. The game still saves, but the achievement doesn't get awarded cleanly.\n\n**Real-world impact:**\n- Achievements awarded multiple times (duplicates in database)\n- `AchievementGrid` shows the same achievement unlocked only once (good UI hiding, bad data)\n- Admin can't audit clean achievement history\n- Potential confusion if code ever displays \"earned count\" or \"earnings history\"\n\n### Mild Warning: Incomplete Error Handling on Profile Updates\n\n**Location:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 114-124\n\n```typescript\nconst { error: updateErr } = await admin.from('profiles').update({\n  // ... updates ...\n}).eq('id', playerId)\n\nif (updateErr) {\n  console.error(`Failed to update profile for ${playerId}:`, updateErr)\n  // But we continue to the next player!\n}\n```\n\nIf a profile update fails, the code logs the error and **continues processing**. This means:\n- Game is still created\n- game_players are still inserted\n- Subsequent players' profiles still update\n- Achievements still awarded\n- But one player's Elo/wins/losses/streaks are stale\n\nThe caller receives `{ success: true }` anyway (line 149), so they don't know part of the operation failed.\n\n**Real-world impact:**\n- One player's rating doesn't update but the game is recorded\n- Elo calculations become inconsistent across the team\n- Undetected data corruption\n\n---\n\n## Phase 4: Client-Server Boundary Audit\n\n### Strengths\n1. All database writes happen in a server action (`'use server'`, line 1 of save-game.ts)\n2. Admin client (service role) is used for all database writes, appropriately bypassing RLS\n3. Fresh player data is fetched server-side before calculations (lines 31-34)\n4. User ID is taken from `currentUser.id` which comes from the logged-in session, not client input (line 104)\n\n### Finding\nNo auth leaks or stale data issues detected in the client-server boundary.\n\n---\n\n## Phase 5: Error Handling Audit\n\n### Missing Error Check on Achievement Insert\n\n**Location:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 142-146\n\n```typescript\nif (newAchievements.length > 0) {\n  await admin.from('achievements').insert(\n    newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))\n  )\n  // No error destructuring, no error checking\n}\n```\n\nShould be:\n```typescript\nif (newAchievements.length > 0) {\n  const { error: achErr } = await admin.from('achievements').insert(\n    newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))\n  )\n  if (achErr) {\n    console.error(`Failed to insert achievements for ${playerId}:`, achErr)\n    // Consider returning early or collecting errors to report back\n  }\n}\n```\n\n### Missing Error Check on Game Players Insert\n\n**Location:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 80-81\n\n```typescript\nconst { error: gpError } = await admin.from('game_players').insert(gamePlayers)\nif (gpError) return { error: 'Failed to save game players.' }\n```\n\nThis is checked correctly, good.\n\n### Redirect Safety\n\n**Location:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/log-game/page.tsx`, line 113\n\n```typescript\nif (result.error) {\n  setError(result.error)\n  setLoading(false)\n  return\n}\n\nrouter.push('/')\nrouter.refresh()\n```\n\n`router.push()` is called outside try/catch, which is correct for Next.js redirect patterns.\n\n---\n\n## Phase 6: Type Safety & Edge Cases\n\n### Achievement Logic Edge Cases\n\n**File:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/lib/achievements.ts`, lines 77-127\n\n1. **First Win with 0 Losses**\n   - Line 101: `if (!has('first_win') && wonGame && prevWins === 0)`\n   - Correct: Only triggers when prevWins is exactly 0\n\n2. **Upset Artist (100+ Elo difference)**\n   - Line 110: `if (!has('upset_artist') && wonGame && opponentEloAvg >= prevElo + 100)`\n   - Correct: Only when opponent is 100+ higher\n\n3. **Pickle Master (S-tier threshold)**\n   - Line 113: `if (!has('pickle_master') && newElo >= 1051 && prevElo < 1051)`\n   - Correct: Triggers exactly when crossing the 1051 threshold (not already above)\n\n4. **Comeback Kid (3+ loss streak to win)**\n   - Line 116: `if (!has('comeback_kid') && wonGame && prevStreak <= -3)`\n   - Correct: Triggers on a win after being in -3 or worse\n\n5. **Hot Streak Boundaries**\n   - Line 104: `newStreak >= 3` \u2192 first triggers at 3-game streak, re-awardable\n   - Line 107: `newStreak >= 5` \u2192 first triggers at 5-game streak\n   - These are `alreadyEarned` checked, so shouldn't re-award if database is clean\n\n6. **Dill Legend (10 games)**\n   - Line 119: `totalGames >= 10`\n   - \u2713 Correct\n   - But note: `totalGames = player.wins + player.losses + 1` (line 112)\n   - This assumes current game hasn't been reflected in wins/losses yet at the time of checking\n   - The profiles are fetched BEFORE the update, so prevWins reflects pre-game state \u2713\n\n7. **Streaks at 0**\n   - Line 104: `prevStreak = player.current_streak ?? 0`\n   - `Math.max(..., newStreak > 0 ? newStreak : 0)` (line 111)\n   - When a player first loses, newStreak = -1, longest_streak stays 0 \u2713\n   - When a player first wins, newStreak = 1, longest_streak becomes 1 \u2713\n\n### Finding: Logic is sound, but the race condition undermines it\n\nThe achievement-checking logic itself is correct. The problem is not in `checkNewAchievements()`, but in how achievements are inserted with stale data.\n\n---\n\n## Summary: Issues Found\n\n### Critical Issues\n\n**[CRITICAL] Race Condition in Achievement Insertion \u2014 Duplicate Achievements Can Be Awarded**\n- **File:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 88-91 (fetch) and 142-146 (insert)\n- **Impact:**\n  - If two games are logged in quick succession for the same player, the second game may fetch an outdated achievement snapshot (before the first game's achievements are committed)\n  - Achievement check passes, insert occurs, violates UNIQUE constraint\n  - Database error is silently swallowed\n  - Duplicates accumulate in achievements table\n  - Data integrity compromised\n- **Fix:**\n  1. Move achievement insertion into a transaction with the profile update, OR\n  2. Fetch achievements again (or lock) right before inserting for each player, OR\n  3. Use a database trigger to auto-award achievements on profile changes (preferred for consistency)\n  4. Always check the error and count returned from `.insert()`:\n     ```typescript\n     const { error: achErr, count } = await admin.from('achievements').insert(...)\n     if (achErr) {\n       console.error(`Achievement insert failed for ${playerId}:`, achErr)\n       // Handle error appropriately\n     }\n     ```\n\n**[CRITICAL] Missing Error Check on Achievement Insert**\n- **File:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 142-146\n- **Impact:** Silent failure if achievement insert is blocked (constraint violation, connection error, etc.). Game saves but achievement doesn't. Inconsistent state.\n- **Fix:** Destructure error from response and check it, log failures\n\n### Warnings\n\n**[WARN] Incomplete Error Handling on Profile Updates \u2014 Game Proceeds with Partial Success**\n- **File:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 114-124\n- **When it triggers:** Network error, database constraint violation, or permission issue during profile update\n- **Impact:** One player's profile doesn't update (Elo, wins, losses, streaks stay stale), but the game is still recorded and achievements are still awarded. Caller is told operation succeeded. Other players' ratings shift, but this player's doesn't.\n- **Fix:**\n  - Collect errors from each profile update\n  - If ANY profile update fails, either roll back the entire operation or return an error status to the caller\n  - Don't silently continue\n\n**[WARN] Stale Achievement Data During Multi-Player Processing**\n- **File:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`, lines 100-147 (main loop)\n- **When it triggers:** In high-load scenarios or when multiple game logs are processed concurrently for the same player\n- **Impact:**\n  - Achievements fetched at the start of the server action\n  - But profiles are updated in a loop, not atomically\n  - If another request completes an achievement for a player between iterations, this request won't see it\n  - Potential race condition leading to duplicates (same as critical issue)\n- **Fix:** Use transactions (if Supabase/PostgREST supports) or trigger-based achievement awarding at the database level\n\n### Suggestions\n\n**[INFO] Improve Logging and Observability**\n- **File:** `/sessions/cool-laughing-pascal/mnt/projects/pickleball-app/app/actions/save-game.ts`\n- **Rationale:** Currently logs profile update errors but swallows achievement errors. No way to detect silent failures in production.\n- **Recommendation:** Log all Elo changes, achievements, and errors with a transaction ID for debugging\n\n**[INFO] Consider Database-Level Achievement Awarding**\n- **File:** Both achievements.ts and save-game.ts\n- **Rationale:** Achievements are now SQL-land logic (thresholds, UNIQUE constraints). Keeping the logic in application code means every place that updates profiles risks duplicating achievement logic.\n- **Recommendation:** Create a Supabase trigger that awards achievements when profiles are updated, removing the application-level loop\n\n---\n\n## Conclusion\n\nThe achievement system has sound logic for checking achievement conditions, but **critical race condition** in the insertion path can cause duplicates to be awarded. The lack of error checking on achievement inserts means failures are silent. Combined with incomplete error handling on profile updates, there's a high risk of inconsistent state in production.\n\n**Recommended immediate action:** Add error checking to achievement inserts and consider implementing atomic multi-player updates or trigger-based achievement awarding.\n"}], "grading": null}, {"id": "eval-achievements-without_skill", "prompt": "I just added achievements and streaks to my pickleball app. Can you check if the achievement logic has any bugs? I'm worried some achievements might not trigger correctly or might award duplicates.", "eval_id": 3, "outputs": [{"name": "report.md", "type": "text", "content": "# Achievement System Bug Analysis Report\n\n## Executive Summary\nThe achievement system has **3 critical bugs** that can cause achievements to fail triggering or award duplicates. These issues affect accuracy and user experience. The UNIQUE constraint in the database provides partial protection against duplicates, but the logic bugs should still be fixed.\n\n---\n\n## Bug #1: Streak Achievements Never Trigger on Loss (CRITICAL)\n\n### Location\n`lib/achievements.ts`, lines 104-108\n\n### Problem\nThe `hot_streak_3` and `hot_streak_5` achievements only check `wonGame && newStreak >= X`, but a streak can continue even after a loss when the player is on a losing streak. These achievements are intended for **winning streaks only**, so the logic is actually correct. However, there's a **hidden logic issue**: these achievements will trigger multiple times during the same streak.\n\n**Example scenario:**\n- Player is on 2-game win streak, plays another game and wins\n- `newStreak = 3`, achievement `hot_streak_3` is awarded\n- Player plays another game and wins again\n- `newStreak = 4`, the check `newStreak >= 3` is still true, but `hot_streak_3` should NOT be re-awarded\n\nThis is prevented by the `alreadyEarned` check, which is correct. However, let me look deeper...\n\n### Actually, Bug Identified:\nThe achievement triggering logic relies on `alreadyEarned` to prevent duplicates. While the database has a `UNIQUE (player_id, achievement_key)` constraint, there's a **race condition window**: between the fetch of existing achievements (line 88-97) and the insert of new achievements (line 143-145), another concurrent request could insert a duplicate achievement.\n\nHowever, the more serious issue is in the logic itself:\n\n---\n\n## Bug #2: Pickle Master Achievement Comparison Logic (CRITICAL)\n\n### Location\n`lib/achievements.ts`, line 113\n\n### Problem\n```typescript\nif (!has('pickle_master') && newElo >= 1051 && prevElo < 1051) {\n  earned.push('pickle_master')\n}\n```\n\nThis checks `prevElo < 1051 && newElo >= 1051`, which is correct for \"reaching\" S tier. However, there's a logic flaw:\n\n- **The player needs to REACH 1051+, not just EARN it in this game**\n- If a player is at 1050 Elo, wins a game, and goes to 1052 Elo, they correctly earn it\n- But if they later drop below 1051 and then climb back to 1051+ in a different game, the condition will trigger again because `prevElo < 1051` will be true\n\n**Wait, this is actually protected by `!has('pickle_master')`.** The real bug is more subtle:\n\nThe comparison is checking if `prevElo < 1051`, but `prevElo` is the Elo **before the current game**. This means if a player had previously earned the achievement, dropped below 1051 (due to losses), they could theoretically re-earn it. But the `has()` check prevents this.\n\n**However, the real issue:** The threshold check is using a hardcoded number that should match the tier definition. If tier definitions change elsewhere in the codebase, this won't be updated.\n\n---\n\n## Bug #3: Comeback Kid Logic Flaw (CRITICAL)\n\n### Location\n`lib/achievements.ts`, line 116\n\n### Problem\n```typescript\nif (!has('comeback_kid') && wonGame && prevStreak <= -3) {\n  earned.push('comeback_kid')\n}\n```\n\n**The condition is checking if `prevStreak <= -3` (3+ game losing streak) BEFORE the current win.**\n\nHowever, there's an edge case:\n- Player is on 3-game losing streak: `current_streak = -3`\n- Player wins the next game: `newStreak = 1` (reset to +1)\n- The achievement triggers because `prevStreak = -3`\n\nThis is actually **correct behavior** \u2014 the achievement is meant to trigger when you win after a losing streak.\n\nBut wait \u2014 **let me re-examine the initialization:**\n\nLooking at `save-game.ts` lines 104-110:\n```typescript\nconst prevStreak = player.current_streak ?? 0\nlet newStreak: number\nif (data.won) {\n  newStreak = prevStreak > 0 ? prevStreak + 1 : 1\n} else {\n  newStreak = prevStreak < 0 ? prevStreak - 1 : -1\n}\n```\n\nThis logic is correct. But there's a subtle issue:\n\n**If `current_streak = 0` (no streak recorded) and the player wins their first game after a reset**, the code sets `newStreak = 1`. But what if the player had a previous losing streak that wasn't properly recorded?\n\nMore importantly: **The `prevStreak` is fetched from `player.current_streak`, which is updated in the same function (line 118)**. So if a game fails to update the database, subsequent checks will use stale data. But this is more of an edge case related to error handling rather than a logic bug.\n\n---\n\n## Bug #4: Achievement Awarded Multiple Times Per Game (CONFIRMED BUG)\n\n### Location\n`lib/achievements.ts`, lines 119-124\n\n### Problem\nBoth `dill_legend` (10 games) and `iron_pickle` (25 games) achievements lack proper duplicate prevention in the logic:\n\n```typescript\nif (!has('dill_legend') && totalGames >= 10) {\n  earned.push('dill_legend')\n}\nif (!has('iron_pickle') && totalGames >= 25) {\n  earned.push('iron_pickle')\n}\n```\n\nWhile the `!has()` check prevents re-awarding, there's a potential issue in `save-game.ts` at **line 112**:\n\n```typescript\nconst totalGames = player.wins + player.losses + 1\n```\n\nThis counts the current game as played. But at this point in the code, `player.wins` and `player.losses` haven't been updated yet (they're updated at lines 116-117). So this calculation is correct.\n\nHowever, **there IS a real issue**: The `totalGames` calculation happens AFTER achievements are checked. Let me verify the order:\n\nLooking at `save-game.ts`:\n- Line 112: `const totalGames = player.wins + player.losses + 1` \u2713 (Correct: includes current game)\n- Line 130-140: `checkNewAchievements()` is called \u2713 (Uses correct totalGames)\n- Line 114-120: Profile is updated \u2713 (After achievement check)\n\nThis order is correct.\n\n---\n\n## Bug #5: Achievement Awards Bypass UNIQUE Constraint (CRITICAL RACE CONDITION)\n\n### Location\n`app/actions/save-game.ts`, lines 87-97 and 143-145\n\n### Problem\nThe code fetches existing achievements once at the beginning (lines 88-97), then later tries to insert new achievements (lines 143-145). **If multiple requests process games for the same player concurrently**, this creates a race condition:\n\n**Scenario:**\n1. Request A fetches achievements for Player X: `[first_win]`\n2. Request B fetches achievements for Player X: `[first_win]` (same result)\n3. Request A checks for `hot_streak_3`: not in list, adds to `newAchievements`\n4. Request B checks for `hot_streak_3`: not in list, adds to `newAchievements`\n5. Request A inserts `hot_streak_3` \u2713\n6. Request B tries to insert `hot_streak_3` \u2717 (UNIQUE constraint violation)\n\nWhile the database constraint will catch duplicate inserts, **the error isn't handled properly** in the code (line 143-145):\n\n```typescript\nif (newAchievements.length > 0) {\n  await admin.from('achievements').insert(\n    newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))\n  )\n}\n```\n\n**Missing error handling!** If the insert fails due to a UNIQUE constraint violation, the error is silently ignored, and no feedback is given to the user.\n\n---\n\n## Bug #6: Hot Streak Achievement Triggers Multiple Times (CONFIRMED BUG)\n\n### Location\n`lib/achievements.ts`, lines 104-108\n\n### Problem\n```typescript\nif (!has('hot_streak_3') && wonGame && newStreak >= 3) {\n  earned.push('hot_streak_3')\n}\nif (!has('hot_streak_5') && wonGame && newStreak >= 5) {\n  earned.push('hot_streak_5')\n}\n```\n\nWhen a player wins their 5th game in a row:\n- Both conditions trigger: `newStreak >= 3` AND `newStreak >= 5`\n- Both achievements are awarded in the same game \u2713 (This is actually correct behavior)\n\nHowever, if the `alreadyEarned` list becomes out of sync (e.g., due to the race condition in Bug #5), then achievements could be re-awarded.\n\n---\n\n## Bug #7: Missing Null Safety in Streak Calculation\n\n### Location\n`app/actions/save-game.ts`, line 104\n\n### Problem\n```typescript\nconst prevStreak = player.current_streak ?? 0\n```\n\nThis is safe. But later in `checkNewAchievements()` (achievements.ts, line 116):\n```typescript\nif (!has('comeback_kid') && wonGame && prevStreak <= -3) {\n```\n\nIf `current_streak` is NULL in the database, it's converted to 0 by the `?? 0` operator, which is correct.\n\n---\n\n## Bug #8: Upset Artist Uses Wrong Elo Reference (CRITICAL)\n\n### Location\n`lib/achievements.ts`, line 110\n\n### Problem\n```typescript\nif (!has('upset_artist') && wonGame && opponentEloAvg >= prevElo + 100) {\n  earned.push('upset_artist')\n}\n```\n\nThis checks if the opponent's Elo is 100+ points higher than the **previous** Elo (`prevElo`). But the issue is:\n\n**In save-game.ts, line 84-85:**\n```typescript\nconst team1AvgElo = team1Ids.reduce((sum, id) => sum + getPlayer(id).elo_rating, 0) / team1Ids.length\nconst team2AvgElo = team2Ids.reduce((sum, id) => sum + getPlayer(id).elo_rating, 0) / team2Ids.length\n```\n\nThis calculates opponent average using **current** Elo ratings from the database (fetched at line 31-34), not the Elo before the game.\n\n**Concrete example:**\n- Player A: current Elo 900, wins against Player B: current Elo 1000\n- `opponentEloAvg = 1000` (current)\n- `prevElo = 900` (before game)\n- `opponentEloAvg >= prevElo + 100` \u2192 `1000 >= 1000` \u2192 TRUE \u2713 (Correct)\n\nActually, this works correctly because both are measured at the same time (before any updates). However, **in doublesformat**, the calculation might be wrong:\n\n**In doubles games** (lines 52-63 in save-game.ts):\n```typescript\nconst [p1a, p1b] = [getPlayer(team1Ids[0]), getPlayer(team1Ids[1])]\nconst [p2a, p2b] = [getPlayer(team2Ids[0]), getPlayer(team2Ids[1])]\n```\n\nThe players are fetched at line 31-34 once. Then at line 84-85, their current Elo is used. This is fine because it's a snapshot.\n\nHowever, **the real issue:** In doublesformat with 2v2, Player A's average opponent Elo should be the average of the 2 opposing players, not the average of their own team:\n\n```typescript\nconst team1AvgElo = team1Ids.reduce((sum, id) => sum + getPlayer(id).elo_rating, 0) / team1Ids.length\nconst team2AvgElo = team2Ids.reduce((sum, id) => sum + getPlayer(id).elo_rating, 0) / team2Ids.length\n```\n\n**This is WRONG!** For a player in Team 1:\n- `opponentAvgElo` should be `team2AvgElo` (the opposing team)\n- But the code assigns: `opponentAvgElo = isTeam1 ? team2AvgElo : team1AvgElo` (line 128)\n\nLet me re-check line 128... Actually, it's correct:\n```typescript\nconst opponentAvgElo = isTeam1 ? team2AvgElo : team1AvgElo\n```\n\nSo the logic is fine.\n\n---\n\n## Summary of Bugs\n\n| Bug # | Severity | Issue | Impact |\n|-------|----------|-------|--------|\n| #1 | MEDIUM | Race condition: concurrent achievement inserts | Potential UNIQUE constraint violations (caught by DB) |\n| #2 | MEDIUM | Missing error handling on achievement insert failures | Silent failures, user doesn't know achievement failed |\n| #3 | LOW | No null coalescing on newElo calculation | Low risk, prevElo is always from database |\n| #4 | MEDIUM | Hot streak achievements can re-trigger if alreadyEarned gets out of sync | Requires race condition to occur first |\n| #5 | MEDIUM | Potential duplicate awards if `alreadyEarned` cache is stale | Depends on concurrent requests |\n\n---\n\n## Recommendations\n\n1. **Add error handling** to the achievement insert (save-game.ts, line 143-145):\n   ```typescript\n   if (newAchievements.length > 0) {\n     const { error } = await admin.from('achievements').insert(\n       newAchievements.map(key => ({ player_id: playerId, achievement_key: key }))\n     )\n     if (error) {\n       console.warn(`Failed to insert achievements for ${playerId}:`, error)\n     }\n   }\n   ```\n\n2. **Implement idempotent achievement checking** using database transactionsor UPSERT logic to prevent race conditions\n\n3. **Add logging** when achievements are triggered for debugging\n\n4. **Consider using a lock** or ensuring achievements are checked transactionally within a single database connection\n\n5. **Test achievement logic** with concurrent game submissions to the same player\n\n---\n\n## Tests to Run\n\n- [ ] Submit two games for the same player in rapid succession\n- [ ] Test hot streak achievements when reaching exactly 3 and 5 wins\n- [ ] Test upset artist achievement with various Elo differences\n- [ ] Test comeback kid with exactly 3-game losing streak\n- [ ] Verify UNIQUE constraint prevents duplicate inserts\n- [ ] Check if achievement errors are properly logged\n"}], "grading": null}], "previous_feedback": {}, "previous_outputs": {}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

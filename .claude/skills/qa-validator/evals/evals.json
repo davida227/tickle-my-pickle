@@ -1,0 +1,23 @@
+{
+  "skill_name": "qa-validator",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just built a feature where users can log pickleball games. It works when I test it myself but my friend says his stats never update after I log a game we played. Can you figure out what's going on?",
+      "expected_output": "Should identify that the browser Supabase client can't update other users' profiles due to RLS policies. Should recommend moving writes to a server action with the admin client.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "We're about to share this app with our friend group. Can you do a QA pass on the whole codebase before we deploy? I want to make sure there aren't any nasty surprises.",
+      "expected_output": "Should produce a structured QA report covering RLS issues, error handling gaps, stale data risks, and any multi-user update problems. Should flag critical issues separately from nice-to-haves.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I just added achievements and streaks to my pickleball app. Can you check if the achievement logic has any bugs? I'm worried some achievements might not trigger correctly or might award duplicates.",
+      "expected_output": "Should trace the achievement checking logic, verify the upsert/unique constraint prevents duplicates, check that streak calculations handle edge cases (first game ever, streak at exactly 0), and verify RLS allows the achievement inserts.",
+      "files": []
+    }
+  ]
+}

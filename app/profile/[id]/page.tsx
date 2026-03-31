@@ -43,18 +43,23 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   const earnedKeys = earnedAchievements?.map(a => a.achievement_key) ?? []
 
-  // All games this player was in
-  const { data: gamePlayers } = await supabase
+  // All games this player was in (fetch extra to account for soft-deleted games)
+  const { data: rawGamePlayers } = await supabase
     .from('game_players')
     .select(`
       elo_before, elo_change, won, team,
-      game:games(id, format, team1_score, team2_score, played_at,
+      game:games(id, format, team1_score, team2_score, played_at, deleted_at,
         game_players(player_id, team, won, profile:profiles(id, username, full_name))
       )
     `)
     .eq('player_id', profileId)
     .order('id', { ascending: false })
-    .limit(20)
+    .limit(40)
+
+  // Exclude soft-deleted games
+  const gamePlayers = (rawGamePlayers ?? [])
+    .filter((gp: any) => gp.game?.deleted_at === null || gp.game?.deleted_at === undefined)
+    .slice(0, 20)
 
   // Build head-to-head stats
   const h2h: Record<string, { name: string; wins: number; losses: number }> = {}

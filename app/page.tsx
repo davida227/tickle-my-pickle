@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import TierBadge from '@/components/TierBadge'
 import RatingTooltip from '@/components/RatingTooltip'
+import DeleteMatchButton from '@/components/DeleteMatchButton'
 
 export default async function HomePage() {
   const supabase = await createClient()
@@ -15,17 +16,22 @@ export default async function HomePage() {
     .eq('id', user.id)
     .single()
 
-  const { data: recentGamePlayers } = await supabase
+  const { data: rawGamePlayers } = await supabase
     .from('game_players')
     .select(`
       elo_before, elo_change, won, team,
-      game:games(id, format, team1_score, team2_score, played_at,
+      game:games(id, format, team1_score, team2_score, played_at, deleted_at,
         game_players(player_id, team, profile:profiles(username, full_name))
       )
     `)
     .eq('player_id', user.id)
-    .order('id', { ascending: false })
-    .limit(5)
+    .limit(20)
+
+  // Exclude soft-deleted games, then sort by played_at descending (most recent first)
+  const recentGamePlayers = (rawGamePlayers ?? [])
+    .filter((gp: any) => gp.game?.deleted_at === null || gp.game?.deleted_at === undefined)
+    .sort((a: any, b: any) => new Date(b.game.played_at).getTime() - new Date(a.game.played_at).getTime())
+    .slice(0, 5)
 
   const winRate = profile && (profile.wins + profile.losses) > 0
     ? Math.round((profile.wins / (profile.wins + profile.losses)) * 100)
@@ -109,6 +115,8 @@ export default async function HomePage() {
             <p className="text-sm">No games yet — log your first one!</p>
           </div>
         ) : (
+          <>
+          <DeleteMatchButton />
           <div className="space-y-3">
             {recentGamePlayers.map((gp: any) => {
               const game = gp.game
@@ -144,6 +152,7 @@ export default async function HomePage() {
               )
             })}
           </div>
+          </>
         )}
       </div>
     </div>

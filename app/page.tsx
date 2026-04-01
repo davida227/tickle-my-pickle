@@ -15,16 +15,17 @@ export default async function HomePage() {
     .eq('id', user.id)
     .single()
 
-  const { data: recentGamePlayers } = await supabase
-    .from('game_players')
+  const { data: recentGames } = await supabase
+    .from('games')
     .select(`
-      elo_before, elo_change, won, team,
-      game:games(id, format, team1_score, team2_score, played_at,
-        game_players(player_id, team, profile:profiles(username, full_name))
+      id, format, team1_score, team2_score, played_at,
+      game_players!inner(
+        elo_before, elo_change, won, team, player_id,
+        profile:profiles(username, full_name)
       )
     `)
-    .eq('player_id', user.id)
-    .order('id', { ascending: false })
+    .eq('game_players.player_id', user.id)
+    .order('played_at', { ascending: false })
     .limit(5)
 
   const winRate = profile && (profile.wins + profile.losses) > 0
@@ -103,24 +104,25 @@ export default async function HomePage() {
       {/* Recent games */}
       <div>
         <h2 className="text-sm font-bold text-dark-400 uppercase tracking-widest mb-3">Recent Games</h2>
-        {!recentGamePlayers || recentGamePlayers.length === 0 ? (
+        {!recentGames || recentGames.length === 0 ? (
           <div className="bg-dark-800 rounded-2xl p-6 text-center text-dark-400 border border-dark-700 neon-card">
             <p className="text-3xl mb-2">🥒</p>
             <p className="text-sm">No games yet — log your first one!</p>
           </div>
         ) : (
           <div className="space-y-3">
-            {recentGamePlayers.map((gp: any) => {
-              const game = gp.game
-              const won = gp.won
-              const eloChange = gp.elo_change
-              const opponents = game.game_players
-                ?.filter((p: any) => p.team !== gp.team)
+            {recentGames.map((g: any) => {
+              const me = g.game_players?.find((p: any) => p.player_id === user.id)
+              if (!me) return null
+              const won = me.won
+              const eloChange = me.elo_change
+              const opponents = g.game_players
+                ?.filter((p: any) => p.team !== me.team)
                 .map((p: any) => p.profile?.full_name?.split(' ')[0] ?? p.profile?.username)
                 .join(' & ')
 
               return (
-                <div key={game.id} className="bg-dark-800 rounded-2xl p-4 border border-dark-700 neon-card flex items-center justify-between">
+                <div key={g.id} className="bg-dark-800 rounded-2xl p-4 border border-dark-700 neon-card flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ${
                       won
@@ -131,8 +133,8 @@ export default async function HomePage() {
                     </div>
                     <div>
                       <p className="font-bold text-dark-100 text-sm">
-                        {game.team1_score}–{game.team2_score}
-                        <span className="font-normal text-dark-400 ml-1 text-xs uppercase tracking-wide">· {game.format}</span>
+                        {g.team1_score}–{g.team2_score}
+                        <span className="font-normal text-dark-400 ml-1 text-xs uppercase tracking-wide">· {g.format}</span>
                       </p>
                       <p className="text-xs text-dark-400">vs {opponents ?? 'Unknown'}</p>
                     </div>

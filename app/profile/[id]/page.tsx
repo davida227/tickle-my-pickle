@@ -53,12 +53,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       )
     `)
     .eq('player_id', profileId)
-    .order('id', { ascending: false })
     .limit(40)
 
-  // Exclude soft-deleted games
+  // Exclude soft-deleted games, then sort by played_at descending (most recent first)
   const gamePlayers = (rawGamePlayers ?? [])
     .filter((gp: any) => gp.game?.deleted_at === null || gp.game?.deleted_at === undefined)
+    .sort((a: any, b: any) => new Date(b.game.played_at).getTime() - new Date(a.game.played_at).getTime())
     .slice(0, 20)
 
   // Build head-to-head stats

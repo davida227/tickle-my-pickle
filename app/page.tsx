@@ -25,12 +25,12 @@ export default async function HomePage() {
       )
     `)
     .eq('player_id', user.id)
-    .order('id', { ascending: false })
     .limit(20)
 
-  // Exclude soft-deleted games
+  // Exclude soft-deleted games, then sort by played_at descending (most recent first)
   const recentGamePlayers = (rawGamePlayers ?? [])
     .filter((gp: any) => gp.game?.deleted_at === null || gp.game?.deleted_at === undefined)
+    .sort((a: any, b: any) => new Date(b.game.played_at).getTime() - new Date(a.game.played_at).getTime())
     .slice(0, 5)
 
   const winRate = profile && (profile.wins + profile.losses) > 0

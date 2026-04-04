@@ -195,16 +195,6 @@ export default function LoginPage() {
               {loading ? 'Loading...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </button>
 
-            {mode === 'signin' && (
-              <div className="text-center">
-                <a
-                  href="/reset-password"
-                  className="text-xs text-dark-400 underline hover:text-dark-300 transition-colors"
-                >
-                  Forgot password?
-                </a>
-              </div>
-            )}
           </form>
         </div>
 

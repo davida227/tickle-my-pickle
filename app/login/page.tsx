@@ -152,7 +152,6 @@ export default function LoginPage() {
                   onChange={e => setFullName(e.target.value)}
                   required
                   className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                  placeholder="David Alummoottil"
                 />
               </div>
             )}
@@ -167,7 +166,6 @@ export default function LoginPage() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                placeholder="david"
               />
             </div>
 
@@ -180,7 +178,6 @@ export default function LoginPage() {
                 required
                 minLength={6}
                 className="w-full border border-dark-600 rounded-xl px-4 py-3 text-sm bg-dark-900 text-dark-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-                placeholder="••••••••"
               />
             </div>
 

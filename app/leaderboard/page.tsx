@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import TierBadge from '@/components/TierBadge'
-import DeleteMatchButton from '@/components/DeleteMatchButton'
 
 export default async function LeaderboardPage() {
   const supabase = await createClient()
@@ -89,10 +88,6 @@ export default async function LeaderboardPage() {
             </Link>
           )
         })}
-      </div>
-      {/* Delete most recent match */}
-      <div className="mt-6">
-        <DeleteMatchButton />
       </div>
     </div>
   )

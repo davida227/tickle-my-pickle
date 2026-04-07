@@ -4,10 +4,9 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const tabs = [
-  { href: '/',            label: 'Home',       icon: '🥒' },
-  { href: '/log-game',   label: 'Log Game',   icon: '➕' },
   { href: '/leaderboard', label: 'Rankings',   icon: '🏆' },
-  { href: '/profile',    label: 'Profile',    icon: '👤' },
+  { href: '/log-game',    label: 'Log Game',   icon: '➕' },
+  { href: '/add-player',  label: 'Add Player', icon: '🧑' },
 ]
 
 export default function Navbar() {
@@ -17,9 +16,7 @@ export default function Navbar() {
     <nav className="fixed bottom-0 left-0 right-0 bg-dark-800 border-t-2 border-brand-600 z-50 pb-safe neon-nav-glow">
       <div className="flex max-w-lg mx-auto">
         {tabs.map(tab => {
-          const active = tab.href === '/'
-            ? pathname === '/'
-            : pathname.startsWith(tab.href)
+          const active = pathname.startsWith(tab.href)
           return (
             <Link
               key={tab.href}

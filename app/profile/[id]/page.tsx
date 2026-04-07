@@ -21,24 +21,20 @@ function StreakBadge({ streak }: { streak: number }) {
 export default async function ProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
-  const profileId = id === 'me' || !id ? user.id : id
 
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', profileId)
+    .eq('id', id)
     .single()
 
-  if (!profile) redirect('/')
+  if (!profile) redirect('/leaderboard')
 
   // Fetch achievements
   const { data: earnedAchievements } = await supabase
     .from('achievements')
     .select('achievement_key, earned_at')
-    .eq('player_id', profileId)
+    .eq('player_id', id)
     .order('earned_at', { ascending: true })
 
   const earnedKeys = earnedAchievements?.map(a => a.achievement_key) ?? []
@@ -52,7 +48,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         game_players(player_id, team, won, profile:profiles(id, username, full_name))
       )
     `)
-    .eq('player_id', profileId)
+    .eq('player_id', id)
     .limit(40)
 
   // Exclude soft-deleted games, then sort by played_at descending (most recent first)
@@ -65,7 +61,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const h2h: Record<string, { name: string; wins: number; losses: number }> = {}
   gamePlayers?.forEach((gp: any) => {
     const game = gp.game
-    const opponents = game.game_players?.filter((p: any) => p.team !== gp.team && p.player_id !== profileId)
+    const opponents = game.game_players?.filter((p: any) => p.team !== gp.team && p.player_id !== id)
     opponents?.forEach((opp: any) => {
       const oppId = opp.player_id
       const oppName = opp.profile?.full_name ?? opp.profile?.username ?? 'Unknown'
@@ -75,29 +71,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     })
   })
 
-  const isMe = profileId === user.id
   const total = profile.wins + profile.losses
   const winRate = total > 0 ? Math.round((profile.wins / total) * 100) : 0
   const currentStreak: number = profile.current_streak ?? 0
   const longestStreak: number = profile.longest_streak ?? 0
 
-  async function signOut() {
-    'use server'
-    const supabase = await createClient()
-    await supabase.auth.signOut()
-    redirect('/login')
-  }
-
   return (
     <div className="px-4 pt-6 pb-28">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-black text-dark-100 tracking-tight">{isMe ? 'My Profile' : 'Player'}</h1>
-        {isMe && (
-          <form action={signOut}>
-            <button type="submit" className="text-sm text-dark-400 underline">Sign out</button>
-          </form>
-        )}
+        <h1 className="text-2xl font-black text-dark-100 tracking-tight">Player Profile</h1>
       </div>
 
       {/* Profile card */}
@@ -111,7 +94,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             <p className="text-dark-400 text-sm">@{profile.username}</p>
           </div>
         </div>
-        {/* Streak badge */}
         {currentStreak !== 0 && (
           <StreakBadge streak={currentStreak} />
         )}

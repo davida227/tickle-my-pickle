@@ -20,7 +20,6 @@ export default function LogGamePage() {
   const router = useRouter()
   const supabase = createClient()
 
-  const [currentUser, setCurrentUser] = useState<Player | null>(null)
   const [allPlayers, setAllPlayers] = useState<Player[]>([])
   const [format, setFormat] = useState<'singles' | 'doubles'>('doubles')
 
@@ -35,18 +34,11 @@ export default function LogGamePage() {
 
   useEffect(() => {
     async function load() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
       const { data: players } = await supabase
         .from('profiles')
         .select('id, username, full_name, elo_rating, wins, losses, current_streak, longest_streak')
         .order('full_name')
-      if (players) {
-        setAllPlayers(players)
-        const me = players.find(p => p.id === user.id) ?? null
-        setCurrentUser(me)
-        if (me) setTeam1([me.id, ''])
-      }
+      if (players) setAllPlayers(players)
     }
     load()
   }, [])
@@ -70,7 +62,7 @@ export default function LogGamePage() {
   }
 
   function resetTeams() {
-    setTeam1([currentUser ? currentUser.id : '', ''])
+    setTeam1(['', ''])
     setTeam2(['', ''])
   }
 
@@ -94,8 +86,6 @@ export default function LogGamePage() {
 
     setLoading(true)
 
-    // All DB writes happen server-side via admin client (bypasses RLS)
-    // createdBy is now derived server-side from the verified session
     const result = await saveGame({
       format,
       team1Score: s1,
@@ -110,7 +100,7 @@ export default function LogGamePage() {
       return
     }
 
-    router.push('/')
+    router.push('/leaderboard')
     router.refresh()
   }
 
@@ -139,7 +129,6 @@ export default function LogGamePage() {
             {options.map(player => (
               <option key={player.id} value={player.id}>
                 {player.full_name ?? player.username}
-                {player.id === currentUser?.id ? ' (me)' : ''}
                 {' '}· {player.elo_rating} Elo
               </option>
             ))}

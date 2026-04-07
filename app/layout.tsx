@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Navbar from '@/components/Navbar'
-import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
   title: 'Tickle my Pickle',
@@ -18,17 +17,14 @@ export const viewport: Viewport = {
   userScalable: false,
 }
 
-export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="bg-dark-900 antialiased">
         <main className="max-w-lg mx-auto min-h-screen pb-20">
           {children}
         </main>
-        {user && <Navbar />}
+        <Navbar />
       </body>
     </html>
   )

@@ -8,16 +8,16 @@ export default function TierBadge({ elo }: TierBadgeProps) {
   let tier: string
   let style: string
 
-  if (elo <= 750) {
+  if (elo < 500) {
     tier = 'D'
     style = 'bg-zinc-700 text-zinc-300 border border-zinc-600'
-  } else if (elo <= 850) {
+  } else if (elo < 700) {
     tier = 'C'
     style = 'bg-blue-900/60 text-blue-300 border border-blue-600/50'
-  } else if (elo <= 950) {
+  } else if (elo < 900) {
     tier = 'B'
     style = 'bg-amber-900/60 text-amber-300 border border-amber-600/50'
-  } else if (elo <= 1050) {
+  } else if (elo < 1100) {
     tier = 'A'
     // neon green glow for A tier
     style = 'text-[#39FF14] border border-[#39FF14]/50 bg-[#39FF14]/10'

@@ -43,7 +43,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     key: 'pickle_master',
     name: 'Pickle Master',
-    description: 'Reach S tier (1051+ rating)',
+    description: 'Reach S tier (1100+ rating)',
     emoji: '🥒',
   },
   {
@@ -110,7 +110,7 @@ export function checkNewAchievements({
   if (!has('upset_artist') && wonGame && opponentEloAvg >= prevElo + 100) {
     earned.push('upset_artist')
   }
-  if (!has('pickle_master') && newElo >= 1051 && prevElo < 1051) {
+  if (!has('pickle_master') && newElo >= 1100 && prevElo < 1100) {
     earned.push('pickle_master')
   }
   if (!has('comeback_kid') && wonGame && prevStreak <= -3) {

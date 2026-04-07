@@ -1,12 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import TierBadge from '@/components/TierBadge'
 
 export default async function LeaderboardPage() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
 
   const { data: players } = await supabase
     .from('profiles')
@@ -33,18 +30,13 @@ export default async function LeaderboardPage() {
 
       <div className="space-y-2">
         {players?.map((player, i) => {
-          const isMe = player.id === user.id
           const total = player.wins + player.losses
           const winRate = total > 0 ? Math.round((player.wins / total) * 100) : 0
           const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : null
 
           return (
             <Link key={player.id} href={`/profile/${player.id}`}>
-              <div className={`rounded-2xl p-4 flex items-center gap-3 border neon-card transition-all ${
-                isMe
-                  ? 'bg-dark-700 neon-border border-2'
-                  : 'bg-dark-800 border-dark-600'
-              }`}>
+              <div className="rounded-2xl p-4 flex items-center gap-3 border neon-card transition-all bg-dark-800 border-dark-600">
                 {/* Rank */}
                 <div className="w-8 text-center shrink-0">
                   {medal ? (
@@ -55,11 +47,7 @@ export default async function LeaderboardPage() {
                 </div>
 
                 {/* Avatar */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 ${
-                  isMe
-                    ? 'bg-brand-600 text-dark-900 neon-btn'
-                    : 'bg-dark-700 text-dark-300 border border-dark-600'
-                }`}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-sm shrink-0 bg-dark-700 text-dark-300 border border-dark-600">
                   {(player.full_name?.[0] ?? player.username?.[0] ?? '?').toUpperCase()}
                 </div>
 
@@ -68,9 +56,7 @@ export default async function LeaderboardPage() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="font-bold text-dark-100 text-sm truncate">
                       {player.full_name ?? player.username}
-                      {isMe && <span className="ml-1 text-xs" style={{ color: '#39FF14' }}>(you)</span>}
                     </p>
-                    {/* Streak indicator */}
                     {(player.current_streak ?? 0) >= 3 && (
                       <span className="text-xs px-1.5 py-0.5 rounded-full font-bold" style={{
                         color: '#39FF14',

@@ -1,7 +1,6 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 import { calculateSinglesElo, calculateDoublesElo } from '@/lib/elo'
 import { checkNewAchievements } from '@/lib/achievements'
 
@@ -14,12 +13,6 @@ type SaveGameInput = {
 }
 
 export async function saveGame(input: SaveGameInput) {
-  // ── Verify authenticated user server-side (never trust client-supplied ID) ──
-  const supabase = await createClient()
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
-  if (authError || !user) return { error: 'Not authenticated.' }
-  const createdBy = user.id
-
   const { format, team1Score, team2Score, team1Ids, team2Ids } = input
   const admin = createAdminClient()
 
@@ -77,7 +70,7 @@ export async function saveGame(input: SaveGameInput) {
   // ── Insert game ────────────────────────────────────
   const { data: game, error: gameError } = await admin
     .from('games')
-    .insert({ format, team1_score: team1Score, team2_score: team2Score, created_by: createdBy })
+    .insert({ format, team1_score: team1Score, team2_score: team2Score })
     .select()
     .single()
 
